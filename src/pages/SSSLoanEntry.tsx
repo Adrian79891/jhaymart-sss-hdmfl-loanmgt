@@ -62,7 +62,7 @@ const SSSLoanEntry = () => {
       'SSS'
     );
 
-    // Handle reloan logic
+    // Handle reloan logic - mark existing loans as inactive and zero balance
     if (formData.isReloan) {
       const existingLoans = getLoans();
       const employeeLoans = existingLoans.filter(
@@ -71,10 +71,17 @@ const SSSLoanEntry = () => {
                 loan.isActive
       );
       
-      // Mark existing loans as inactive
+      // Mark existing loans as inactive and zero out remaining balance
       employeeLoans.forEach(loan => {
-        updateLoan({ ...loan, isActive: false, remainingBalance: 0 });
+        updateLoan({ 
+          ...loan, 
+          isActive: false, 
+          remainingBalance: 0,
+          remainingMonths: 0
+        });
       });
+      
+      console.log(`Marked ${employeeLoans.length} existing SSS loans as inactive for reloan`);
     }
 
     const newLoan: Loan = {
@@ -90,8 +97,8 @@ const SSSLoanEntry = () => {
       interest: Math.round(interest * 100) / 100,
       startOfAmortization: calculations.startOfAmortization,
       amortizationPeriod: calculations.amortizationPeriod,
-      remainingBalance: calculations.remainingBalance, // Will be updated by addLoan
-      remainingMonths: calculations.remainingMonths, // Will be updated by addLoan
+      remainingBalance: calculations.remainingBalance,
+      remainingMonths: calculations.remainingMonths,
       isReloan: formData.isReloan,
       isActive: true,
       createdAt: new Date().toISOString()
@@ -102,7 +109,7 @@ const SSSLoanEntry = () => {
 
     toast({
       title: "SSS Loan Created",
-      description: `Loan for ${formData.employeeName} has been successfully created with smart payment calculations.`,
+      description: `Loan for ${formData.employeeName} has been successfully created${formData.isReloan ? ' as a reloan with previous balance zeroed' : ''}.`,
     });
 
     // Reset form
@@ -246,7 +253,7 @@ const SSSLoanEntry = () => {
                   onCheckedChange={(checked) => handleInputChange('isReloan', checked === true)}
                 />
                 <Label htmlFor="isReloan" className="text-sm font-medium">
-                  Mark as Reloan (will deactivate existing loan)
+                  Mark as Reloan (will deactivate existing loan and zero balance)
                 </Label>
               </div>
 

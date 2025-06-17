@@ -20,9 +20,10 @@ export const calculateLoanDetails = (
   const startDate = new Date(grantedDate);
   startDate.setMonth(startDate.getMonth() + 2);
   
-  // End date is start date + loan term months
+  // End date is start date + loan term months - 1 day to get the exact end
   const endDate = new Date(startDate);
   endDate.setMonth(endDate.getMonth() + loanTerm);
+  endDate.setDate(endDate.getDate() - 1);
   
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { 
@@ -37,8 +38,8 @@ export const calculateLoanDetails = (
     interest: Math.round(interest * 100) / 100,
     startOfAmortization: formatDate(startDate),
     amortizationPeriod: `${formatDate(startDate)} to ${formatDate(endDate)}`,
-    remainingBalance: Math.round(totalLoan * 100) / 100, // This will be updated by payment calculations
-    remainingMonths: loanTerm // This will be updated by payment calculations
+    remainingBalance: Math.round(totalLoan * 100) / 100,
+    remainingMonths: loanTerm
   };
 };
 

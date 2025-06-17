@@ -129,7 +129,7 @@ const SearchLoan = () => {
                               )}
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                               <div>
                                 <p className="text-gray-500">Department</p>
                                 <p className="font-medium">{loan.department}</p>
@@ -142,18 +142,32 @@ const SearchLoan = () => {
                                 </div>
                               </div>
                               <div>
+                                <p className="text-gray-500">Loan Term</p>
+                                <p className="font-medium">{loan.loanTerm} months</p>
+                              </div>
+                              <div>
                                 <p className="text-gray-500">Amortization Period</p>
-                                <p className="font-medium">{loan.amortizationPeriod}</p>
+                                <p className="font-medium text-xs">{loan.amortizationPeriod}</p>
                               </div>
                             </div>
                           </div>
                           
                           <div className="mt-4 lg:mt-0 lg:ml-6 lg:text-right space-y-2">
-                            <div className="flex lg:flex-col lg:items-end space-x-4 lg:space-x-0 lg:space-y-2">
+                            <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-2">
                               <div>
                                 <p className="text-sm text-gray-500">Principal Amount</p>
                                 <p className="font-semibold text-green-600">{formatCurrency(loan.principalAmount)}</p>
                               </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Total Loan</p>
+                                <p className="font-semibold">{formatCurrency(loan.totalLoan)}</p>
+                              </div>
+                              {loan.loanType === 'HDMF' && loan.interest > 0 && (
+                                <div>
+                                  <p className="text-sm text-gray-500">Interest</p>
+                                  <p className="font-semibold text-blue-600">{formatCurrency(loan.interest)}</p>
+                                </div>
+                              )}
                               <div>
                                 <p className="text-sm text-gray-500">Monthly Amortization</p>
                                 <p className="font-semibold">{formatCurrency(loan.monthlyAmortization)}</p>
