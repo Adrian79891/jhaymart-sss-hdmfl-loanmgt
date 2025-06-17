@@ -15,12 +15,12 @@ export const calculateLoanDetails = (
     interest = totalLoan - principalAmount;
   }
   
-  // Start of amortization is 2 months after date granted
+  // Start of amortization is exactly 2 months after date granted
   const grantedDate = new Date(dateGranted);
   const startDate = new Date(grantedDate);
   startDate.setMonth(startDate.getMonth() + 2);
   
-  // End date is start date + loan term months - 1 day to get the exact end
+  // End date is start date + loan term months, then subtract 1 day to get the last payment date
   const endDate = new Date(startDate);
   endDate.setMonth(endDate.getMonth() + loanTerm);
   endDate.setDate(endDate.getDate() - 1);
