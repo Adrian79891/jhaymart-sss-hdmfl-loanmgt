@@ -1,4 +1,6 @@
 
+import { generateAndMarkPayments } from './paymentCalculations';
+
 export const calculateLoanDetails = (
   principalAmount: number,
   loanTerm: number,
@@ -35,49 +37,18 @@ export const calculateLoanDetails = (
     interest: Math.round(interest * 100) / 100,
     startOfAmortization: formatDate(startDate),
     amortizationPeriod: `${formatDate(startDate)} to ${formatDate(endDate)}`,
-    remainingBalance: Math.round(totalLoan * 100) / 100,
-    remainingMonths: loanTerm
+    remainingBalance: Math.round(totalLoan * 100) / 100, // This will be updated by payment calculations
+    remainingMonths: loanTerm // This will be updated by payment calculations
   };
 };
 
+// Legacy function - kept for backward compatibility but not used for new loans
 export const generatePaymentSchedule = (
   loanId: string,
   startDate: string,
   loanTerm: number,
   monthlyAmortization: number
 ) => {
-  const payments = [];
-  const start = new Date(startDate);
-  const paymentAmount = Math.round((monthlyAmortization / 2) * 100) / 100;
-  
-  for (let i = 0; i < loanTerm; i++) {
-    const currentMonth = new Date(start);
-    currentMonth.setMonth(currentMonth.getMonth() + i);
-    
-    // 15th payment
-    const payment15 = new Date(currentMonth);
-    payment15.setDate(15);
-    
-    payments.push({
-      id: `${loanId}-${i}-15`,
-      loanId,
-      dueDate: payment15.toISOString().split('T')[0],
-      amount: paymentAmount,
-      isPaid: false
-    });
-    
-    // 30th payment (or last day of month)
-    const payment30 = new Date(currentMonth);
-    payment30.setDate(30);
-    
-    payments.push({
-      id: `${loanId}-${i}-30`,
-      loanId,
-      dueDate: payment30.toISOString().split('T')[0],
-      amount: paymentAmount,
-      isPaid: false
-    });
-  }
-  
-  return payments;
+  console.warn('generatePaymentSchedule is deprecated. Use generateAndMarkPayments instead.');
+  return generateAndMarkPayments(loanId, startDate, loanTerm, monthlyAmortization);
 };

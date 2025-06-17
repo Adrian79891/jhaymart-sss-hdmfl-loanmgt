@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,13 +8,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { addLoan, getLoans, updateLoan } from '@/utils/storage';
-import { calculateLoanDetails, generatePaymentSchedule } from '@/utils/loanCalculations';
+import { addLoan, getLoans, updateLoan, getSettings } from '@/utils/storage';
+import { calculateLoanDetails } from '@/utils/loanCalculations';
 import { Loan } from '@/types/loan';
 
 const HDMFLoanEntry = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const settings = getSettings();
   
   const [formData, setFormData] = useState({
     employeeName: '',
@@ -88,18 +88,19 @@ const HDMFLoanEntry = () => {
       interest: calculations.interest,
       startOfAmortization: calculations.startOfAmortization,
       amortizationPeriod: calculations.amortizationPeriod,
-      remainingBalance: calculations.remainingBalance,
-      remainingMonths: calculations.remainingMonths,
+      remainingBalance: calculations.remainingBalance, // Will be updated by addLoan
+      remainingMonths: calculations.remainingMonths, // Will be updated by addLoan
       isReloan: formData.isReloan,
       isActive: true,
       createdAt: new Date().toISOString()
     };
 
+    console.log('Creating HDMF loan with auto-payment calculation:', settings.autoCalculatePastPayments);
     addLoan(newLoan);
 
     toast({
       title: "HDMF Loan Created",
-      description: `Loan for ${formData.employeeName} has been successfully created.`,
+      description: `Loan for ${formData.employeeName} has been successfully created with smart payment calculations.`,
     });
 
     // Reset form
@@ -128,6 +129,11 @@ const HDMFLoanEntry = () => {
           </Button>
           <h1 className="text-3xl font-bold text-gray-900">HDMF Loan Entry</h1>
           <p className="text-gray-600">Create a new HDMF loan application</p>
+          {settings.autoCalculatePastPayments && (
+            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
+              ✅ Smart payment calculation enabled - past due payments will be auto-marked as paid
+            </div>
+          )}
         </div>
 
         <Card className="shadow-lg">
