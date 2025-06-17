@@ -1,10 +1,18 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import HDMFLoanEntry from "./pages/HDMFLoanEntry";
+import SSSLoanEntry from "./pages/SSSLoanEntry";
+import SearchLoan from "./pages/SearchLoan";
+import Reports from "./pages/Reports";
+import BackupRestore from "./pages/BackupRestore";
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -13,13 +21,20 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/hdmf-loan" element={<HDMFLoanEntry />} />
+            <Route path="/sss-loan" element={<SSSLoanEntry />} />
+            <Route path="/search" element={<SearchLoan />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/backup" element={<BackupRestore />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
