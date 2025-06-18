@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import ReportGenerator from '@/components/ReportGenerator';
 
@@ -34,27 +34,6 @@ const Reports = () => {
 
         <div className="grid gap-6">
           <ReportGenerator />
-
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-green-600" />
-                <span>Payment Scheduler</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 mb-4">
-                View and manage payment schedules for all employees. Search by employee name and manually update payment statuses.
-              </p>
-              <Button 
-                onClick={() => navigate('/payment-scheduler')}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Open Payment Scheduler
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

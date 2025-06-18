@@ -31,22 +31,22 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
       >
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold mb-2">SALARY LOAN STATEMENT</h1>
+          <h1 className="text-2xl font-bold mb-2">SALARY LOAN PER PAYROLL DEDUCTION REPORT</h1>
           <p className="text-sm text-gray-600">As of {reportData.reportPeriod}</p>
         </div>
 
-        {/* Employee Loans Summary */}
+        {/* Employee Monthly Amortization Summary */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Outstanding Loan Balances</h2>
+          <h2 className="text-lg font-semibold mb-4">Monthly Payroll Deductions</h2>
           
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300 text-sm">
               <thead>
                 <tr className="bg-gray-100">
                   <th className="border border-gray-300 p-3 text-left">Employee Name</th>
-                  <th className="border border-gray-300 p-3 text-right">SSS Loan Balance</th>
-                  <th className="border border-gray-300 p-3 text-right">HDMF Loan Balance</th>
-                  <th className="border border-gray-300 p-3 text-right">Total Balance</th>
+                  <th className="border border-gray-300 p-3 text-right">SSS Loan Monthly</th>
+                  <th className="border border-gray-300 p-3 text-right">HDMF Loan Monthly</th>
+                  <th className="border border-gray-300 p-3 text-right">Total Monthly</th>
                 </tr>
               </thead>
               <tbody>
@@ -54,13 +54,13 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
                   <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                     <td className="border border-gray-300 p-3 font-medium">{employee.employeeName}</td>
                     <td className="border border-gray-300 p-3 text-right">
-                      ₱{employee.sssBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      ₱{employee.sssAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="border border-gray-300 p-3 text-right">
-                      ₱{employee.hdmfBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      ₱{employee.hdmfAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="border border-gray-300 p-3 text-right font-semibold">
-                      ₱{employee.totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      ₱{employee.totalAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))}
@@ -69,10 +69,10 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
                 <tr className="bg-gray-200 font-bold">
                   <td className="border border-gray-300 p-3 text-center">TOTAL</td>
                   <td className="border border-gray-300 p-3 text-right text-blue-600">
-                    ₱{reportData.totalSSSBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    ₱{reportData.totalSSSAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="border border-gray-300 p-3 text-right text-orange-600">
-                    ₱{reportData.totalHDMFBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    ₱{reportData.totalHDMFAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="border border-gray-300 p-3 text-right text-red-600">
                     ₱{reportData.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -86,21 +86,21 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
         {/* Summary Boxes */}
         <div className="grid grid-cols-3 gap-6 mb-8">
           <div className="border rounded p-4 text-center">
-            <h3 className="font-semibold mb-2 text-blue-600">Total SSS Loans</h3>
+            <h3 className="font-semibold mb-2 text-blue-600">Total SSS Loan Monthly</h3>
             <p className="text-xl font-bold">
-              ₱{reportData.totalSSSBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              ₱{reportData.totalSSSAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </p>
           </div>
           
           <div className="border rounded p-4 text-center">
-            <h3 className="font-semibold mb-2 text-orange-600">Total HDMF Loans</h3>
+            <h3 className="font-semibold mb-2 text-orange-600">Total HDMF Loan Monthly</h3>
             <p className="text-xl font-bold">
-              ₱{reportData.totalHDMFBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              ₱{reportData.totalHDMFAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </p>
           </div>
 
           <div className="border rounded p-4 text-center bg-gray-50">
-            <h3 className="font-semibold mb-2 text-red-600">Grand Total</h3>
+            <h3 className="font-semibold mb-2 text-red-600">Grand Total Monthly</h3>
             <p className="text-2xl font-bold">
               ₱{reportData.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </p>
@@ -132,6 +132,7 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
         </div>
       </div>
 
+      {/* Print styles */}
       <style>
         {`
           @media print {

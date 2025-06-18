@@ -41,16 +41,16 @@ const ReportGenerator = () => {
       if (!acc[employeeName]) {
         acc[employeeName] = {
           employeeName,
-          sssBalance: 0,
-          hdmfBalance: 0,
+          sssAmortization: 0,
+          hdmfAmortization: 0,
           loans: []
         };
       }
 
       if (loan.loanType === 'SSS') {
-        acc[employeeName].sssBalance += loan.remainingBalance;
+        acc[employeeName].sssAmortization += loan.monthlyAmortization;
       } else if (loan.loanType === 'HDMF') {
-        acc[employeeName].hdmfBalance += loan.remainingBalance;
+        acc[employeeName].hdmfAmortization += loan.monthlyAmortization;
       }
 
       acc[employeeName].loans.push(loan);
@@ -60,25 +60,25 @@ const ReportGenerator = () => {
     const employeeData = Object.values(employeeLoans);
 
     // Calculate totals
-    let totalSSSBalance = 0;
-    let totalHDMFBalance = 0;
+    let totalSSSAmortization = 0;
+    let totalHDMFAmortization = 0;
 
     employeeData.forEach((employee: any) => {
-      totalSSSBalance += employee.sssBalance;
-      totalHDMFBalance += employee.hdmfBalance;
-      employee.sssBalance = Math.round(employee.sssBalance * 100) / 100;
-      employee.hdmfBalance = Math.round(employee.hdmfBalance * 100) / 100;
-      employee.totalBalance = employee.sssBalance + employee.hdmfBalance;
+      totalSSSAmortization += employee.sssAmortization;
+      totalHDMFAmortization += employee.hdmfAmortization;
+      employee.sssAmortization = Math.round(employee.sssAmortization * 100) / 100;
+      employee.hdmfAmortization = Math.round(employee.hdmfAmortization * 100) / 100;
+      employee.totalAmortization = employee.sssAmortization + employee.hdmfAmortization;
     });
 
     const data = {
       fromDate: format(fromDate, 'MMMM dd, yyyy'),
       toDate: format(toDate, 'MMMM dd, yyyy'),
-      reportPeriod: `${format(fromDate, 'MMMM dd, yyyy')} to ${format(toDate, 'MMMM dd, yyyy')}`,
+      reportPeriod: `${format(toDate, 'MMMM yyyy')}`,
       employees: employeeData,
-      totalSSSBalance: Math.round(totalSSSBalance * 100) / 100,
-      totalHDMFBalance: Math.round(totalHDMFBalance * 100) / 100,
-      grandTotal: Math.round((totalSSSBalance + totalHDMFBalance) * 100) / 100,
+      totalSSSAmortization: Math.round(totalSSSAmortization * 100) / 100,
+      totalHDMFAmortization: Math.round(totalHDMFAmortization * 100) / 100,
+      grandTotal: Math.round((totalSSSAmortization + totalHDMFAmortization) * 100) / 100,
       preparedBy: preparedBy.trim() || 'N/A',
       approvedBy: approvedBy.trim() || 'N/A',
       reportDate: new Date().toLocaleDateString('en-US', { 
@@ -97,7 +97,7 @@ const ReportGenerator = () => {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <FileText className="h-5 w-5 text-blue-600" />
-          <span>Salary Loan Statement Generator</span>
+          <span>Salary Loan per Payroll Deduction Report Generator</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -191,7 +191,7 @@ const ReportGenerator = () => {
           <Dialog open={showPreview} onOpenChange={setShowPreview}>
             <DialogContent className="max-w-6xl">
               <DialogHeader>
-                <DialogTitle>Salary Loan Statement - Print Preview</DialogTitle>
+                <DialogTitle>Salary Loan per Payroll Deduction Report - Print Preview</DialogTitle>
               </DialogHeader>
               <PrintPreview reportData={reportData} onClose={() => setShowPreview(false)} />
             </DialogContent>
