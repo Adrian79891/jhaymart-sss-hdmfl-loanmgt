@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { FileText, Eye, Download } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FileText, Eye } from 'lucide-react';
 import { getLoans } from '@/utils/storage';
-import { Loan } from '@/types/loan';
 import PrintPreview from './PrintPreview';
 
 const ReportGenerator = () => {
@@ -107,7 +106,7 @@ const ReportGenerator = () => {
           <div className="flex space-x-2">
             <Button onClick={generateReport} className="bg-blue-600 hover:bg-blue-700">
               <Eye className="h-4 w-4 mr-2" />
-              Generate Preview
+              Generate Print Preview
             </Button>
           </div>
         </div>

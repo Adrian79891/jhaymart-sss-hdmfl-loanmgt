@@ -1,9 +1,7 @@
 
 import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, Printer } from 'lucide-react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { Printer } from 'lucide-react';
 
 interface PrintPreviewProps {
   reportData: any;
@@ -12,42 +10,6 @@ interface PrintPreviewProps {
 
 const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
   const reportRef = useRef<HTMLDivElement>(null);
-
-  const downloadPDF = async () => {
-    if (!reportRef.current) return;
-
-    try {
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF();
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save(`Salary_Loan_Statement_${reportData.employeeName}_${new Date().toISOString().split('T')[0]}.pdf`);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
-    }
-  };
 
   const printReport = () => {
     window.print();
@@ -60,15 +22,11 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
           <Printer className="h-4 w-4 mr-2" />
           Print
         </Button>
-        <Button onClick={downloadPDF} className="bg-red-600 hover:bg-red-700">
-          <Download className="h-4 w-4 mr-2" />
-          Download PDF
-        </Button>
       </div>
 
       <div 
         ref={reportRef} 
-        className="bg-white p-8 min-h-[11in] w-full mx-auto shadow-lg"
+        className="bg-white p-8 min-h-[11in] w-full mx-auto shadow-lg print-area"
         style={{ fontFamily: 'Arial, sans-serif' }}
       >
         {/* Header */}
