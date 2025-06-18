@@ -32,94 +32,80 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2">SALARY LOAN STATEMENT</h1>
-          <p className="text-sm text-gray-600">As of {reportData.reportDate}</p>
+          <p className="text-sm text-gray-600">As of {reportData.reportPeriod}</p>
         </div>
 
-        {/* Employee Information */}
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">Employee Information</h2>
-          <div className="border-b pb-2">
-            <p><strong>Employee Name:</strong> {reportData.employeeName}</p>
-          </div>
-        </div>
-
-        {/* Loan Details */}
+        {/* Employee Loans Summary */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Loan Details</h2>
+          <h2 className="text-lg font-semibold mb-4">Outstanding Loan Balances</h2>
           
-          <div className="grid grid-cols-2 gap-8 mb-6">
-            <div className="border rounded p-4">
-              <h3 className="font-semibold text-center mb-3">SSS LOAN</h3>
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Balance as of 1st day of the month</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  ₱{reportData.sssBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-            </div>
-            
-            <div className="border rounded p-4">
-              <h3 className="font-semibold text-center mb-3">HDMF LOAN</h3>
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Balance as of 1st day of the month</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  ₱{reportData.hdmfBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Total */}
-          <div className="border-t-2 border-gray-800 pt-4">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold">TOTAL LOAN BALANCE:</span>
-              <span className="text-2xl font-bold text-red-600">
-                ₱{reportData.totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </span>
-            </div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300 text-sm">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 p-3 text-left">Employee Name</th>
+                  <th className="border border-gray-300 p-3 text-right">SSS Loan Balance</th>
+                  <th className="border border-gray-300 p-3 text-right">HDMF Loan Balance</th>
+                  <th className="border border-gray-300 p-3 text-right">Total Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reportData.employees.map((employee: any, index: number) => (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                    <td className="border border-gray-300 p-3 font-medium">{employee.employeeName}</td>
+                    <td className="border border-gray-300 p-3 text-right">
+                      ₱{employee.sssBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="border border-gray-300 p-3 text-right">
+                      ₱{employee.hdmfBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="border border-gray-300 p-3 text-right font-semibold">
+                      ₱{employee.totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                ))}
+                
+                {/* Totals Row */}
+                <tr className="bg-gray-200 font-bold">
+                  <td className="border border-gray-300 p-3 text-center">TOTAL</td>
+                  <td className="border border-gray-300 p-3 text-right text-blue-600">
+                    ₱{reportData.totalSSSBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="border border-gray-300 p-3 text-right text-orange-600">
+                    ₱{reportData.totalHDMFBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="border border-gray-300 p-3 text-right text-red-600">
+                    ₱{reportData.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Detailed Loan Information */}
-        {reportData.loans.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">Detailed Loan Information</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 p-2 text-left">Loan Type</th>
-                    <th className="border border-gray-300 p-2 text-left">Date Granted</th>
-                    <th className="border border-gray-300 p-2 text-right">Principal</th>
-                    <th className="border border-gray-300 p-2 text-right">Monthly Payment</th>
-                    <th className="border border-gray-300 p-2 text-right">Remaining Balance</th>
-                    <th className="border border-gray-300 p-2 text-center">Remaining Months</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reportData.loans.map((loan: any, index: number) => (
-                    <tr key={index}>
-                      <td className="border border-gray-300 p-2">{loan.loanType}</td>
-                      <td className="border border-gray-300 p-2">
-                        {new Date(loan.dateGranted).toLocaleDateString('en-US')}
-                      </td>
-                      <td className="border border-gray-300 p-2 text-right">
-                        ₱{loan.principalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="border border-gray-300 p-2 text-right">
-                        ₱{loan.monthlyAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="border border-gray-300 p-2 text-right">
-                        ₱{loan.remainingBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="border border-gray-300 p-2 text-center">{loan.remainingMonths}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        {/* Summary Boxes */}
+        <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="border rounded p-4 text-center">
+            <h3 className="font-semibold mb-2 text-blue-600">Total SSS Loans</h3>
+            <p className="text-xl font-bold">
+              ₱{reportData.totalSSSBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </p>
           </div>
-        )}
+          
+          <div className="border rounded p-4 text-center">
+            <h3 className="font-semibold mb-2 text-orange-600">Total HDMF Loans</h3>
+            <p className="text-xl font-bold">
+              ₱{reportData.totalHDMFBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+
+          <div className="border rounded p-4 text-center bg-gray-50">
+            <h3 className="font-semibold mb-2 text-red-600">Grand Total</h3>
+            <p className="text-2xl font-bold">
+              ₱{reportData.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+        </div>
 
         {/* Signatures */}
         <div className="mt-16">
@@ -139,10 +125,7 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
 
         {/* Footer */}
         <div className="text-center mt-8 text-sm text-gray-500">
-          <p>Generated on {new Date().toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
+          <p>Generated on {reportData.reportDate} at {new Date().toLocaleTimeString('en-US', { 
             hour: '2-digit',
             minute: '2-digit'
           })}</p>
