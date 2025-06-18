@@ -191,28 +191,30 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
         </div>
       </div>
 
-      <style jsx>{`
-        @media print {
-          .no-print {
-            display: none !important;
+      <style>
+        {`
+          @media print {
+            .no-print {
+              display: none !important;
+            }
+            
+            body * {
+              visibility: hidden;
+            }
+            
+            .print-area, .print-area * {
+              visibility: visible;
+            }
+            
+            .print-area {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+            }
           }
-          
-          body * {
-            visibility: hidden;
-          }
-          
-          .print-area, .print-area * {
-            visibility: visible;
-          }
-          
-          .print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-        }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
