@@ -3,8 +3,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Download } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Calendar } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import ReportGenerator from '@/components/ReportGenerator';
 
 const Reports = () => {
   const { isAuthenticated } = useAuth();
@@ -32,20 +33,25 @@ const Reports = () => {
         </div>
 
         <div className="grid gap-6">
+          <ReportGenerator />
+
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <FileText className="h-5 w-5 text-orange-600" />
-                <span>Auto PDF Report</span>
+                <Calendar className="h-5 w-5 text-green-600" />
+                <span>Payment Scheduler</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 mb-4">
-                Automatically generated PDF report with all current loan data. This report is generated each time the system is opened.
+                View and manage payment schedules for all employees. Search by employee name and manually update payment statuses.
               </p>
-              <Button className="bg-orange-600 hover:bg-orange-700">
-                <FileText className="h-4 w-4 mr-2" />
-                View Auto Report
+              <Button 
+                onClick={() => navigate('/payment-scheduler')}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Open Payment Scheduler
               </Button>
             </CardContent>
           </Card>
@@ -54,17 +60,17 @@ const Reports = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Download className="h-5 w-5 text-red-600" />
-                <span>Manual Report Generator</span>
+                <span>Export Options</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 mb-4">
-                Generate custom reports with filters for loan type, department, and status. Export to PDF or Excel format.
+                Export loan data in various formats for backup or external analysis.
               </p>
               <div className="space-y-2">
                 <Button className="w-full md:w-auto mr-0 md:mr-2 mb-2 md:mb-0 bg-red-600 hover:bg-red-700">
                   <Download className="h-4 w-4 mr-2" />
-                  Generate PDF Report
+                  Export All Loans to PDF
                 </Button>
                 <Button variant="outline" className="w-full md:w-auto">
                   <Download className="h-4 w-4 mr-2" />

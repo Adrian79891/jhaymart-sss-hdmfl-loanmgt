@@ -1,4 +1,3 @@
-
 import { Loan, Payment } from '@/types/loan';
 import { generateAndMarkPayments, updateLoanBalances } from './paymentCalculations';
 
@@ -6,31 +5,91 @@ const LOANS_KEY = 'jhaymarts_loans';
 const PAYMENTS_KEY = 'jhaymarts_payments';
 const SETTINGS_KEY = 'jhaymarts_settings';
 
+// Add backup to sessionStorage for cross-tab persistence
+const backupToSession = (key: string, data: any) => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.warn('Failed to backup to session storage:', error);
+  }
+};
+
+const restoreFromSession = (key: string) => {
+  try {
+    const data = sessionStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.warn('Failed to restore from session storage:', error);
+    return null;
+  }
+};
+
 export const saveLoans = (loans: Loan[]) => {
   localStorage.setItem(LOANS_KEY, JSON.stringify(loans));
+  backupToSession(LOANS_KEY, loans);
 };
 
 export const getLoans = (): Loan[] => {
-  const stored = localStorage.getItem(LOANS_KEY);
-  return stored ? JSON.parse(stored) : [];
+  let stored = localStorage.getItem(LOANS_KEY);
+  
+  // If localStorage is empty, try sessionStorage
+  if (!stored) {
+    const sessionData = restoreFromSession(LOANS_KEY);
+    if (sessionData) {
+      // Restore to localStorage
+      localStorage.setItem(LOANS_KEY, JSON.stringify(sessionData));
+      stored = JSON.stringify(sessionData);
+    }
+  }
+  
+  const loans = stored ? JSON.parse(stored) : [];
+  
+  // Ensure all loans have required properties
+  return loans.map((loan: any) => ({
+    ...loan,
+    isActive: loan.isActive !== undefined ? loan.isActive : true,
+    createdAt: loan.createdAt || new Date().toISOString(),
+    payments: loan.payments || []
+  }));
 };
 
 export const savePayments = (payments: Payment[]) => {
   localStorage.setItem(PAYMENTS_KEY, JSON.stringify(payments));
+  backupToSession(PAYMENTS_KEY, payments);
 };
 
 export const getPayments = (): Payment[] => {
-  const stored = localStorage.getItem(PAYMENTS_KEY);
+  let stored = localStorage.getItem(PAYMENTS_KEY);
+  
+  // If localStorage is empty, try sessionStorage
+  if (!stored) {
+    const sessionData = restoreFromSession(PAYMENTS_KEY);
+    if (sessionData) {
+      localStorage.setItem(PAYMENTS_KEY, JSON.stringify(sessionData));
+      stored = JSON.stringify(sessionData);
+    }
+  }
+  
   return stored ? JSON.parse(stored) : [];
 };
 
 export const getSettings = () => {
-  const stored = localStorage.getItem(SETTINGS_KEY);
+  let stored = localStorage.getItem(SETTINGS_KEY);
+  
+  if (!stored) {
+    const sessionData = restoreFromSession(SETTINGS_KEY);
+    if (sessionData) {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(sessionData));
+      stored = JSON.stringify(sessionData);
+    }
+  }
+  
   return stored ? JSON.parse(stored) : { autoCalculatePastPayments: true };
 };
 
 export const saveSettings = (settings: any) => {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  backupToSession(SETTINGS_KEY, settings);
 };
 
 export const addLoan = (loan: Loan) => {
@@ -154,4 +213,22 @@ export const searchLoansByEmployee = (employeeName: string): Loan[] => {
   return loans.filter(loan => 
     loan.employeeName.toLowerCase().includes(employeeName.toLowerCase())
   );
+};
+
+// Add data initialization on app start
+export const initializeStorage = () => {
+  // Refresh loan balances on app start
+  refreshLoanBalances();
+  
+  // Sync with sessionStorage
+  const loans = getLoans();
+  const payments = getPayments();
+  const settings = getSettings();
+  
+  if (loans.length > 0) backupToSession(LOANS_KEY, loans);
+  if (payments.length > 0) backupToSession(PAYMENTS_KEY, payments);
+  backupToSession(SETTINGS_KEY, settings);
+  
+  console.log('Storage initialized successfully');
+  console.log(`Found ${loans.length} loans in storage`);
 };
