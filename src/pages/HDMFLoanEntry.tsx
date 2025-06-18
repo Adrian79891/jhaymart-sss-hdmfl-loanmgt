@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, UserX } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { addLoan, getLoans, updateLoan, getSettings } from '@/utils/storage';
@@ -24,6 +25,7 @@ const HDMFLoanEntry = () => {
     principalAmount: '',
     loanTerm: '',
     monthlyAmortization: '',
+    interest: '',
     isReloan: false
   });
 
@@ -36,17 +38,81 @@ const HDMFLoanEntry = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleDeleteEmployee = () => {
+    if (!formData.employeeName.trim()) {
+      toast({
+        title: "No Employee Selected",
+        description: "Please enter an employee name to delete their loans.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const loans = getLoans();
+    const employeeLoans = loans.filter(
+      loan => loan.employeeName.toLowerCase() === formData.employeeName.toLowerCase() && 
+              loan.loanType === 'HDMF' && 
+              loan.isActive
+    );
+
+    if (employeeLoans.length === 0) {
+      toast({
+        title: "No Active Loans Found",
+        description: `No active HDMF loans found for ${formData.employeeName}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Mark all active HDMF loans for this employee as inactive
+    employeeLoans.forEach(loan => {
+      updateLoan({ 
+        ...loan, 
+        isActive: false, 
+        remainingBalance: 0,
+        remainingMonths: 0
+      });
+    });
+
+    toast({
+      title: "Employee Loans Deleted",
+      description: `Successfully deleted ${employeeLoans.length} HDMF loan(s) for ${formData.employeeName}.`,
+    });
+
+    // Reset form
+    setFormData({
+      employeeName: '',
+      department: '',
+      dateGranted: '',
+      principalAmount: '',
+      loanTerm: '',
+      monthlyAmortization: '',
+      interest: '',
+      isReloan: false
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     const principalAmount = parseFloat(formData.principalAmount);
     const loanTerm = parseInt(formData.loanTerm);
     const monthlyAmortization = parseFloat(formData.monthlyAmortization);
+    const customInterest = formData.interest ? parseFloat(formData.interest) : null;
     
     if (isNaN(principalAmount) || isNaN(loanTerm) || isNaN(monthlyAmortization)) {
       toast({
         title: "Invalid Input",
         description: "Please check your numeric inputs.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.interest && isNaN(customInterest!)) {
+      toast({
+        title: "Invalid Interest",
+        description: "Please enter a valid interest amount.",
         variant: "destructive",
       });
       return;
@@ -59,6 +125,10 @@ const HDMFLoanEntry = () => {
       formData.dateGranted,
       'HDMF'
     );
+
+    // Use custom interest if provided, otherwise use calculated interest
+    const finalInterest = customInterest !== null ? customInterest : calculations.interest;
+    const finalTotalLoan = customInterest !== null ? principalAmount + customInterest : calculations.totalLoan;
 
     // Handle reloan logic - mark existing loans as inactive and zero out remaining balance
     if (formData.isReloan) {
@@ -91,8 +161,8 @@ const HDMFLoanEntry = () => {
       principalAmount,
       loanTerm,
       monthlyAmortization,
-      totalLoan: calculations.totalLoan,
-      interest: calculations.interest,
+      totalLoan: finalTotalLoan,
+      interest: finalInterest,
       startOfAmortization: calculations.startOfAmortization,
       amortizationPeriod: calculations.amortizationPeriod,
       remainingBalance: calculations.remainingBalance,
@@ -118,6 +188,7 @@ const HDMFLoanEntry = () => {
       principalAmount: '',
       loanTerm: '',
       monthlyAmortization: '',
+      interest: '',
       isReloan: false
     });
   };
@@ -145,11 +216,22 @@ const HDMFLoanEntry = () => {
 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">H</span>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">H</span>
+                </div>
+                <span>HDMF Loan Application</span>
               </div>
-              <span>HDMF Loan Application</span>
+              <Button
+                onClick={handleDeleteEmployee}
+                variant="destructive"
+                size="sm"
+                className="ml-2"
+              >
+                <UserX className="h-4 w-4 mr-2" />
+                Delete Employee
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -229,6 +311,21 @@ const HDMFLoanEntry = () => {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="interest">Interest Amount (optional)</Label>
+                <Input
+                  id="interest"
+                  type="number"
+                  step="0.01"
+                  value={formData.interest}
+                  onChange={(e) => handleInputChange('interest', e.target.value)}
+                  placeholder="Enter custom interest amount (leave blank for auto-calculation)"
+                />
+                <p className="text-sm text-gray-500">
+                  Leave blank to auto-calculate based on principal amount and monthly amortization
+                </p>
               </div>
 
               <div className="flex items-center space-x-2">
