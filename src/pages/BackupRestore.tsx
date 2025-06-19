@@ -82,24 +82,36 @@ const BackupRestore = () => {
 
   const handleResetSystem = () => {
     const confirmed = window.confirm(
-      'Are you sure you want to reset the entire system? This action cannot be undone and will delete all loan data.'
+      'Are you sure you want to reset the entire system? This action cannot be undone and will delete all loan data, payments, and dashboard statistics.'
     );
     
     if (confirmed) {
       const doubleConfirmed = window.confirm(
-        'This is your final warning. All data will be permanently deleted. Continue?'
+        'This is your final warning. All data will be permanently deleted including all loans, payments, and dashboard statistics. Continue?'
       );
       
       if (doubleConfirmed) {
+        // Clear all localStorage data
         localStorage.clear();
+        
+        // Clear all sessionStorage data
+        sessionStorage.clear();
+        
+        // Reset storage with empty arrays
+        saveLoans([]);
+        savePayments([]);
+        
+        console.log('System completely reset - all data cleared');
+        
         toast({
-          title: "System Reset",
-          description: "All system data has been cleared.",
+          title: "System Reset Complete",
+          description: "All system data has been permanently deleted.",
         });
         
         // Redirect to login after reset
         setTimeout(() => {
           navigate('/');
+          window.location.reload(); // Force a complete page reload to reset all state
         }, 2000);
       }
     }
@@ -180,8 +192,8 @@ const BackupRestore = () => {
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <h4 className="font-semibold text-red-800 mb-2">Reset Entire System</h4>
                   <p className="text-sm text-red-700 mb-4">
-                    This will permanently delete all loan records, payments, and system data. 
-                    This action cannot be undone.
+                    This will permanently delete all loan records, payments, dashboard statistics, and system data. 
+                    This action cannot be undone and will reset everything including Total Loans, Active Loans, Total Principal, and Outstanding Loans to zero.
                   </p>
                   <Button 
                     onClick={handleResetSystem}

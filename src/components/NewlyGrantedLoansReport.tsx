@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { CreditCard, Eye, Calendar, Download } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { getLoans } from '@/utils/storage';
 import * as XLSX from 'xlsx';
@@ -38,16 +38,28 @@ const NewlyGrantedLoansReport = () => {
       return grantedDate >= startDate && grantedDate <= endDate;
     });
 
-    const employeeData = newlyGrantedLoans.map(loan => ({
-      employeeName: loan.employeeName,
-      dateGranted: loan.dateGranted,
-      loanTerm: loan.loanTerm,
-      amortizationPeriod: loan.amortizationPeriod,
-      principalAmount: loan.principalAmount,
-      monthlyAmortization: loan.monthlyAmortization,
-      loanType: loan.loanType,
-      totalLoan: loan.totalLoan
-    }));
+    const employeeData = newlyGrantedLoans.map(loan => {
+      // Calculate first amortization date (typically first payment date)
+      const firstAmortizationDate = loan.payments && loan.payments.length > 0 
+        ? loan.payments[0].dueDate 
+        : format(addMonths(new Date(loan.dateGranted), 1), 'MMM dd, yyyy');
+      
+      // Calculate last amortization date based on loan term
+      const lastAmortizationDate = loan.payments && loan.payments.length > 0
+        ? loan.payments[loan.payments.length - 1].dueDate
+        : format(addMonths(new Date(loan.dateGranted), loan.loanTerm), 'MMM dd, yyyy');
+
+      return {
+        employeeName: loan.employeeName,
+        dateGranted: loan.dateGranted,
+        loanTerm: loan.loanTerm,
+        amortizationPeriod: `${firstAmortizationDate} to ${lastAmortizationDate}`,
+        principalAmount: loan.principalAmount,
+        monthlyAmortization: loan.monthlyAmortization,
+        loanType: loan.loanType,
+        totalLoan: loan.totalLoan
+      };
+    });
 
     const data = {
       reportMonth: format(reportMonth, 'MMMM yyyy'),

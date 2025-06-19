@@ -5,13 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { FileText, Eye, Calendar } from 'lucide-react';
+import { FileText, Eye, Calendar, Download } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { getLoans } from '@/utils/storage';
 import PrintPreview from './PrintPreview';
+import * as XLSX from 'xlsx';
 
 const ReportGenerator = () => {
   const [fromDate, setFromDate] = useState<Date>();
@@ -90,6 +91,37 @@ const ReportGenerator = () => {
 
     setReportData(data);
     setShowPreview(true);
+  };
+
+  const exportToExcel = () => {
+    if (!reportData) return;
+
+    const worksheet = XLSX.utils.json_to_sheet([
+      { A: 'Salary Loan per Payroll Deduction Report' },
+      { A: `From ${reportData.fromDate} to ${reportData.toDate}` },
+      { A: '' },
+      { A: 'Employee Name', B: 'SSS Amortization', C: 'HDMF Amortization', D: 'Total Amortization' },
+      ...reportData.employees.map((emp: any) => ({
+        A: emp.employeeName,
+        B: `₱${emp.sssAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+        C: `₱${emp.hdmfAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+        D: `₱${emp.totalAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+      })),
+      { A: '' },
+      { A: 'TOTALS:' },
+      { A: 'Total SSS Amortization:', B: `₱${reportData.totalSSSAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+      { A: 'Total HDMF Amortization:', B: `₱${reportData.totalHDMFAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+      { A: 'Grand Total:', B: `₱${reportData.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+      { A: '' },
+      { A: `Prepared by: ${reportData.preparedBy}` },
+      { A: `Approved by: ${reportData.approvedBy}` },
+      { A: `Generated on: ${reportData.reportDate}` }
+    ]);
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Payroll Deduction');
+    
+    XLSX.writeFile(workbook, `Payroll_Deduction_Report_${format(fromDate!, 'yyyy-MM-dd')}.xlsx`);
   };
 
   return (
@@ -184,6 +216,12 @@ const ReportGenerator = () => {
               <Eye className="h-4 w-4 mr-2" />
               Generate Print Preview
             </Button>
+            {reportData && (
+              <Button onClick={exportToExcel} variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Export to Excel
+              </Button>
+            )}
           </div>
         </div>
 
