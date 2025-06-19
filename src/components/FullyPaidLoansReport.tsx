@@ -19,10 +19,10 @@ const FullyPaidLoansReport = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
 
-  const generateReport = () => {
+  const generateReportData = () => {
     if (!asOfDate) {
       alert('Please select the "As of" date');
-      return;
+      return null;
     }
 
     const loans = getLoans();
@@ -56,7 +56,7 @@ const FullyPaidLoansReport = () => {
       totalLoan: loan.totalLoan
     }));
 
-    const data = {
+    return {
       asOfDate: format(asOfDate, 'MMMM dd, yyyy'),
       employees: employeeData,
       totalEmployees: employeeData.length,
@@ -68,31 +68,37 @@ const FullyPaidLoansReport = () => {
         day: 'numeric' 
       })
     };
+  };
 
-    setReportData(data);
-    setShowPreview(true);
+  const generateReport = () => {
+    const data = generateReportData();
+    if (data) {
+      setReportData(data);
+      setShowPreview(true);
+    }
   };
 
   const exportToExcel = () => {
-    if (!reportData) return;
+    const data = generateReportData();
+    if (!data) return;
 
     const worksheet = XLSX.utils.json_to_sheet([
       { A: 'Employee Fully Paid Loans' },
-      { A: `As of ${reportData.asOfDate}` },
+      { A: `As of ${data.asOfDate}` },
       { A: '' },
       { A: 'Employee Name', B: 'Amount (Monthly Amortization)', C: 'Date Fully Paid', D: 'Loan Type' },
-      ...reportData.employees.map((emp: any) => ({
+      ...data.employees.map((emp: any) => ({
         A: emp.employeeName,
         B: `₱${emp.monthlyAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
         C: new Date(emp.dateFullyPaid).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
         D: emp.loanType
       })),
       { A: '' },
-      { A: `Total Employees: ${reportData.totalEmployees}` },
-      { A: `Total Monthly Amortization: ₱${reportData.totalAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+      { A: `Total Employees: ${data.totalEmployees}` },
+      { A: `Total Monthly Amortization: ₱${data.totalAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
       { A: '' },
-      { A: `Prepared by: ${reportData.preparedBy}` },
-      { A: `Generated on: ${reportData.reportDate}` }
+      { A: `Prepared by: ${data.preparedBy}` },
+      { A: `Generated on: ${data.reportDate}` }
     ]);
 
     const workbook = XLSX.utils.book_new();
@@ -155,12 +161,10 @@ const FullyPaidLoansReport = () => {
               <Eye className="h-4 w-4 mr-2" />
               Generate Preview
             </Button>
-            {reportData && (
-              <Button onClick={exportToExcel} variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Export to Excel
-              </Button>
-            )}
+            <Button onClick={exportToExcel} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export to Excel
+            </Button>
           </div>
         </div>
 

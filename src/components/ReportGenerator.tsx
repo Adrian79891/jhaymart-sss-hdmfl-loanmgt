@@ -22,15 +22,15 @@ const ReportGenerator = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
 
-  const generateReport = () => {
+  const generateReportData = () => {
     if (!fromDate || !toDate) {
       alert('Please select both from and to dates');
-      return;
+      return null;
     }
 
     if (fromDate > toDate) {
       alert('From date cannot be later than to date');
-      return;
+      return null;
     }
 
     const loans = getLoans();
@@ -72,7 +72,7 @@ const ReportGenerator = () => {
       employee.totalAmortization = employee.sssAmortization + employee.hdmfAmortization;
     });
 
-    const data = {
+    return {
       fromDate: format(fromDate, 'MMMM dd, yyyy'),
       toDate: format(toDate, 'MMMM dd, yyyy'),
       reportPeriod: `${format(toDate, 'MMMM yyyy')}`,
@@ -88,20 +88,26 @@ const ReportGenerator = () => {
         day: 'numeric' 
       })
     };
+  };
 
-    setReportData(data);
-    setShowPreview(true);
+  const generateReport = () => {
+    const data = generateReportData();
+    if (data) {
+      setReportData(data);
+      setShowPreview(true);
+    }
   };
 
   const exportToExcel = () => {
-    if (!reportData) return;
+    const data = generateReportData();
+    if (!data) return;
 
     const worksheet = XLSX.utils.json_to_sheet([
       { A: 'Salary Loan per Payroll Deduction Report' },
-      { A: `From ${reportData.fromDate} to ${reportData.toDate}` },
+      { A: `From ${data.fromDate} to ${data.toDate}` },
       { A: '' },
       { A: 'Employee Name', B: 'SSS Amortization', C: 'HDMF Amortization', D: 'Total Amortization' },
-      ...reportData.employees.map((emp: any) => ({
+      ...data.employees.map((emp: any) => ({
         A: emp.employeeName,
         B: `₱${emp.sssAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
         C: `₱${emp.hdmfAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
@@ -109,13 +115,13 @@ const ReportGenerator = () => {
       })),
       { A: '' },
       { A: 'TOTALS:' },
-      { A: 'Total SSS Amortization:', B: `₱${reportData.totalSSSAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
-      { A: 'Total HDMF Amortization:', B: `₱${reportData.totalHDMFAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
-      { A: 'Grand Total:', B: `₱${reportData.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+      { A: 'Total SSS Amortization:', B: `₱${data.totalSSSAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+      { A: 'Total HDMF Amortization:', B: `₱${data.totalHDMFAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+      { A: 'Grand Total:', B: `₱${data.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
       { A: '' },
-      { A: `Prepared by: ${reportData.preparedBy}` },
-      { A: `Approved by: ${reportData.approvedBy}` },
-      { A: `Generated on: ${reportData.reportDate}` }
+      { A: `Prepared by: ${data.preparedBy}` },
+      { A: `Approved by: ${data.approvedBy}` },
+      { A: `Generated on: ${data.reportDate}` }
     ]);
 
     const workbook = XLSX.utils.book_new();
@@ -216,12 +222,10 @@ const ReportGenerator = () => {
               <Eye className="h-4 w-4 mr-2" />
               Generate Print Preview
             </Button>
-            {reportData && (
-              <Button onClick={exportToExcel} variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Export to Excel
-              </Button>
-            )}
+            <Button onClick={exportToExcel} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export to Excel
+            </Button>
           </div>
         </div>
 

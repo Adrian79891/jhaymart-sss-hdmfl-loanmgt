@@ -19,10 +19,10 @@ const NewlyGrantedLoansReport = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
 
-  const generateReport = () => {
+  const generateReportData = () => {
     if (!reportMonth) {
       alert('Please select the report month');
-      return;
+      return null;
     }
 
     const loans = getLoans();
@@ -39,14 +39,14 @@ const NewlyGrantedLoansReport = () => {
     });
 
     const employeeData = newlyGrantedLoans.map(loan => {
-      // Calculate first amortization date (typically first payment date)
+      // Calculate first amortization date (first payment date from payments array)
       const firstAmortizationDate = loan.payments && loan.payments.length > 0 
-        ? loan.payments[0].dueDate 
+        ? format(new Date(loan.payments[0].dueDate), 'MMM dd, yyyy')
         : format(addMonths(new Date(loan.dateGranted), 1), 'MMM dd, yyyy');
       
-      // Calculate last amortization date based on loan term
+      // Calculate last amortization date (last payment date from payments array)
       const lastAmortizationDate = loan.payments && loan.payments.length > 0
-        ? loan.payments[loan.payments.length - 1].dueDate
+        ? format(new Date(loan.payments[loan.payments.length - 1].dueDate), 'MMM dd, yyyy')
         : format(addMonths(new Date(loan.dateGranted), loan.loanTerm), 'MMM dd, yyyy');
 
       return {
@@ -57,11 +57,12 @@ const NewlyGrantedLoansReport = () => {
         principalAmount: loan.principalAmount,
         monthlyAmortization: loan.monthlyAmortization,
         loanType: loan.loanType,
-        totalLoan: loan.totalLoan
+        totalLoan: loan.totalLoan,
+        firstAmortizationDate: firstAmortizationDate
       };
     });
 
-    const data = {
+    return {
       reportMonth: format(reportMonth, 'MMMM yyyy'),
       previousMonth: format(previousMonth, 'MMMM yyyy'),
       employees: employeeData,
@@ -75,20 +76,26 @@ const NewlyGrantedLoansReport = () => {
         day: 'numeric' 
       })
     };
+  };
 
-    setReportData(data);
-    setShowPreview(true);
+  const generateReport = () => {
+    const data = generateReportData();
+    if (data) {
+      setReportData(data);
+      setShowPreview(true);
+    }
   };
 
   const exportToExcel = () => {
-    if (!reportData) return;
+    const data = generateReportData();
+    if (!data) return;
 
     const worksheet = XLSX.utils.json_to_sheet([
       { A: 'Newly Granted Loans' },
-      { A: `Loans granted in ${reportData.previousMonth}` },
+      { A: `Loans granted in ${data.previousMonth}` },
       { A: '' },
       { A: 'Employee Name', B: 'Date Granted', C: 'Loan Term', D: 'Amortization Period', E: 'Principal Amount', F: 'Monthly Amortization' },
-      ...reportData.employees.map((emp: any) => ({
+      ...data.employees.map((emp: any) => ({
         A: emp.employeeName,
         B: new Date(emp.dateGranted).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
         C: `${emp.loanTerm} months`,
@@ -97,12 +104,12 @@ const NewlyGrantedLoansReport = () => {
         F: `₱${emp.monthlyAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
       })),
       { A: '' },
-      { A: `Total Employees: ${reportData.totalEmployees}` },
-      { A: `Total Principal Amount: ₱${reportData.totalPrincipalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
-      { A: `Total Monthly Amortization: ₱${reportData.totalMonthlyAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+      { A: `Total Employees: ${data.totalEmployees}` },
+      { A: `Total Principal Amount: ₱${data.totalPrincipalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+      { A: `Total Monthly Amortization: ₱${data.totalMonthlyAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
       { A: '' },
-      { A: `Prepared by: ${reportData.preparedBy}` },
-      { A: `Generated on: ${reportData.reportDate}` }
+      { A: `Prepared by: ${data.preparedBy}` },
+      { A: `Generated on: ${data.reportDate}` }
     ]);
 
     const workbook = XLSX.utils.book_new();
@@ -168,12 +175,10 @@ const NewlyGrantedLoansReport = () => {
               <Eye className="h-4 w-4 mr-2" />
               Generate Preview
             </Button>
-            {reportData && (
-              <Button onClick={exportToExcel} variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Export to Excel
-              </Button>
-            )}
+            <Button onClick={exportToExcel} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export to Excel
+            </Button>
           </div>
         </div>
 
