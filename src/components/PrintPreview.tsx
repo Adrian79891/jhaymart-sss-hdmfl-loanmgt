@@ -31,7 +31,8 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
       >
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold mb-2">SALARY LOAN PER PAYROLL DEDUCTION REPORT</h1>
+          <h1 className="text-3xl font-bold mb-1">JHAYMARTS INDUSTRIES, INC.</h1>
+          <h2 className="text-2xl font-bold mb-2">SALARY LOAN PER PAYROLL DEDUCTION REPORT</h2>
           <p className="text-sm text-gray-600">As of {reportData.reportPeriod}</p>
         </div>
 
