@@ -143,6 +143,22 @@ export const updateLoan = (updatedLoan: Loan) => {
   }
 };
 
+export const deleteLoan = (loanId: string) => {
+  const loans = getLoans();
+  const payments = getPayments();
+  
+  // Remove the loan
+  const updatedLoans = loans.filter(loan => loan.id !== loanId);
+  
+  // Remove associated payments
+  const updatedPayments = payments.filter(payment => payment.loanId !== loanId);
+  
+  saveLoans(updatedLoans);
+  savePayments(updatedPayments);
+  
+  console.log(`Deleted loan ${loanId} and its associated payments`);
+};
+
 export const refreshLoanBalances = () => {
   const loans = getLoans();
   const payments = getPayments();
