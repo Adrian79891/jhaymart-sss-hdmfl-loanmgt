@@ -84,7 +84,7 @@ const FullyPaidLoansReport = () => {
 
     const worksheet = XLSX.utils.json_to_sheet([
       { A: 'JHAYMARTS INDUSTRIES, INC.' },
-      { A: 'Employee Fully Paid Loans' },
+      { A: 'EMPLOYEE FULLY PAID LOANS REPORT' },
       { A: `As of ${data.asOfDate}` },
       { A: '' },
       { A: 'Employee Name', B: 'Amount (Monthly Amortization)', C: 'Date Fully Paid', D: 'Loan Type' },

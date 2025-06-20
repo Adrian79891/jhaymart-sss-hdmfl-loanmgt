@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Trash } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { addLoan, getLoans, updateLoan, getSettings } from '@/utils/storage';
+import { addLoan, getLoans, updateLoan, getSettings, deleteLoan } from '@/utils/storage';
 import { calculateLoanDetails } from '@/utils/loanCalculations';
 import { Loan } from '@/types/loan';
 
@@ -35,6 +35,55 @@ const SSSLoanEntry = () => {
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDelete = () => {
+    if (!formData.employeeName.trim()) {
+      toast({
+        title: "No Employee Selected",
+        description: "Please enter an employee name to delete their SSS loans.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete all SSS loans for ${formData.employeeName}?`)) {
+      const loans = getLoans();
+      const employeeSSLoans = loans.filter(
+        loan => loan.employeeName.toLowerCase() === formData.employeeName.toLowerCase() && 
+                loan.loanType === 'SSS'
+      );
+
+      if (employeeSSLoans.length === 0) {
+        toast({
+          title: "No Loans Found",
+          description: `No SSS loans found for ${formData.employeeName}.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      employeeSSLoans.forEach(loan => {
+        deleteLoan(loan.id);
+      });
+
+      toast({
+        title: "SSS Loans Deleted",
+        description: `Deleted ${employeeSSLoans.length} SSS loan(s) for ${formData.employeeName}.`,
+      });
+
+      // Reset form
+      setFormData({
+        employeeName: '',
+        department: '',
+        dateGranted: '',
+        principalAmount: '',
+        loanTerm: '',
+        monthlyAmortization: '',
+        interest: '',
+        isReloan: false
+      });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -257,10 +306,19 @@ const SSSLoanEntry = () => {
                 </Label>
               </div>
 
-              <div className="pt-4">
-                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700">
+              <div className="pt-4 flex space-x-2">
+                <Button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700">
                   <Save className="h-4 w-4 mr-2" />
                   Create SSS Loan
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  onClick={handleDelete}
+                  className="px-6"
+                >
+                  <Trash className="h-4 w-4 mr-2" />
+                  Delete
                 </Button>
               </div>
             </form>

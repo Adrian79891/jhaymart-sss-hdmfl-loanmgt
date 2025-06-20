@@ -103,8 +103,9 @@ const ReportGenerator = () => {
     if (!data) return;
 
     const worksheet = XLSX.utils.json_to_sheet([
-      { A: 'Salary Loan per Payroll Deduction Report' },
-      { A: `From ${data.fromDate} to ${data.toDate}` },
+      { A: 'JHAYMARTS INDUSTRIES, INC.' },
+      { A: 'SALARY LOAN PER PAYROLL DEDUCTION REPORT' },
+      { A: `As of ${data.reportPeriod}` },
       { A: '' },
       { A: 'Employee Name', B: 'SSS Amortization', C: 'HDMF Amortization', D: 'Total Amortization' },
       ...data.employees.map((emp: any) => ({
