@@ -125,24 +125,16 @@ const HDMFLoanEntry = () => {
       'HDMF'
     );
 
-    // If no interest is provided (left blank), use only principal amount for total loan
-    // Otherwise use custom interest if provided, or calculated interest
+    // Fixed logic: Only use principal amount when interest field is blank
     let finalInterest = 0;
     let finalTotalLoan = principalAmount; // Default to principal amount only
 
-    if (customInterest !== null) {
-      // Custom interest provided
-      finalInterest = customInterest;
-      finalTotalLoan = principalAmount + customInterest;
-    } else if (formData.interest === '') {
-      // Interest field is blank - use only principal amount
-      finalInterest = 0;
-      finalTotalLoan = principalAmount;
-    } else {
-      // Use calculated interest (fallback)
-      finalInterest = calculations.interest;
-      finalTotalLoan = calculations.totalLoan;
+    if (formData.interest.trim() !== '') {
+      // Interest field has a value - use custom interest
+      finalInterest = customInterest!;
+      finalTotalLoan = principalAmount + customInterest!;
     }
+    // If interest field is blank (empty string), keep finalInterest = 0 and finalTotalLoan = principalAmount
 
     // Handle reloan logic - mark existing loans as inactive and zero out remaining balance
     if (formData.isReloan) {
@@ -179,7 +171,7 @@ const HDMFLoanEntry = () => {
       interest: finalInterest,
       startOfAmortization: calculations.startOfAmortization,
       amortizationPeriod: calculations.amortizationPeriod,
-      remainingBalance: finalTotalLoan, // Use finalTotalLoan instead of calculations.remainingBalance
+      remainingBalance: finalTotalLoan,
       remainingMonths: calculations.remainingMonths,
       isReloan: formData.isReloan,
       isActive: true,
