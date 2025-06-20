@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,9 +125,24 @@ const HDMFLoanEntry = () => {
       'HDMF'
     );
 
-    // Use custom interest if provided, otherwise use calculated interest
-    const finalInterest = customInterest !== null ? customInterest : calculations.interest;
-    const finalTotalLoan = customInterest !== null ? principalAmount + customInterest : calculations.totalLoan;
+    // If no interest is provided (left blank), use only principal amount for total loan
+    // Otherwise use custom interest if provided, or calculated interest
+    let finalInterest = 0;
+    let finalTotalLoan = principalAmount; // Default to principal amount only
+
+    if (customInterest !== null) {
+      // Custom interest provided
+      finalInterest = customInterest;
+      finalTotalLoan = principalAmount + customInterest;
+    } else if (formData.interest === '') {
+      // Interest field is blank - use only principal amount
+      finalInterest = 0;
+      finalTotalLoan = principalAmount;
+    } else {
+      // Use calculated interest (fallback)
+      finalInterest = calculations.interest;
+      finalTotalLoan = calculations.totalLoan;
+    }
 
     // Handle reloan logic - mark existing loans as inactive and zero out remaining balance
     if (formData.isReloan) {
@@ -165,7 +179,7 @@ const HDMFLoanEntry = () => {
       interest: finalInterest,
       startOfAmortization: calculations.startOfAmortization,
       amortizationPeriod: calculations.amortizationPeriod,
-      remainingBalance: calculations.remainingBalance,
+      remainingBalance: finalTotalLoan, // Use finalTotalLoan instead of calculations.remainingBalance
       remainingMonths: calculations.remainingMonths,
       isReloan: formData.isReloan,
       isActive: true,

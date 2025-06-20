@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,10 +33,20 @@ const ReportGenerator = () => {
     }
 
     const loans = getLoans();
-    const activeLoans = loans.filter(loan => loan.isActive && loan.remainingBalance > 0);
+    
+    // Filter loans that were granted within the selected date range
+    const filteredLoans = loans.filter(loan => {
+      if (!loan.isActive || loan.remainingBalance <= 0) return false;
+      
+      const loanGrantedDate = new Date(loan.dateGranted);
+      const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+      const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+      
+      return loanGrantedDate >= fromDateOnly && loanGrantedDate <= toDateOnly;
+    });
 
     // Group loans by employee
-    const employeeLoans = activeLoans.reduce((acc, loan) => {
+    const employeeLoans = filteredLoans.reduce((acc, loan) => {
       const employeeName = loan.employeeName;
       if (!acc[employeeName]) {
         acc[employeeName] = {
