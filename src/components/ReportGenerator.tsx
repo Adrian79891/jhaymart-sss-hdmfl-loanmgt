@@ -41,7 +41,7 @@ const ReportGenerator = () => {
     const filteredLoans = loans.filter(loan => {
       if (!loan.isActive || loan.remainingBalance <= 0) return false;
       
-      const loanStartDate = new Date(loan.amortizationStartDate || loan.dateGranted);
+      const loanStartDate = new Date(loan.startOfAmortization || loan.dateGranted);
       
       // Check if the loan was active during the report month (previous month)
       return loanStartDate <= reportMonth;
