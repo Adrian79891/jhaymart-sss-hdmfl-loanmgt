@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,18 +20,18 @@ const PaymentScheduler = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
 
-  if (!isAuthenticated) {
-    navigate('/');
-    return null;
-  }
-
   useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/');
+      return;
+    }
+
     const allLoans = getLoans();
     const allPayments = getPayments();
     setLoans(allLoans);
     setPayments(allPayments);
     setFilteredPayments(allPayments);
-  }, []);
+  }, [isAuthenticated, navigate]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +117,10 @@ const PaymentScheduler = () => {
   const sortedPayments = filteredPayments.sort((a, b) => {
     return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
   });
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
