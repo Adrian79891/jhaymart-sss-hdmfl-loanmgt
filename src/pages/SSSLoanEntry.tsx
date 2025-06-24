@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Save, Trash } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { addLoan, getLoans, updateLoan, getSettings, deleteLoan } from '@/utils/storage';
+import { addLoan, getLoans, updateLoan, getSettings, deleteLoan, getPayments, savePayments } from '@/utils/storage';
 import { calculateLoanDetails } from '@/utils/loanCalculations';
 import { Loan } from '@/types/loan';
 
@@ -111,9 +112,11 @@ const SSSLoanEntry = () => {
       'SSS'
     );
 
-    // Handle reloan logic - mark existing loans as inactive and zero balance
+    // Handle reloan logic - mark existing loans as inactive, zero balance, and mark payments as paid
     if (formData.isReloan) {
       const existingLoans = getLoans();
+      const existingPayments = getPayments();
+      
       const employeeLoans = existingLoans.filter(
         loan => loan.employeeName.toLowerCase() === formData.employeeName.toLowerCase() && 
                 loan.loanType === 'SSS' && 
@@ -130,7 +133,24 @@ const SSSLoanEntry = () => {
         });
       });
       
+      // Mark all payments for existing loans as paid
+      const updatedPayments = existingPayments.map(payment => {
+        const isPaymentForExistingLoan = employeeLoans.some(loan => loan.id === payment.loanId);
+        if (isPaymentForExistingLoan && !payment.isPaid) {
+          return {
+            ...payment,
+            isPaid: true,
+            paidDate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return payment;
+      });
+      
+      // Save updated payments
+      savePayments(updatedPayments);
+      
       console.log(`Marked ${employeeLoans.length} existing SSS loans as inactive for reloan`);
+      console.log(`Marked payments as paid for existing loans`);
     }
 
     const newLoan: Loan = {
@@ -158,7 +178,7 @@ const SSSLoanEntry = () => {
 
     toast({
       title: "SSS Loan Created",
-      description: `Loan for ${formData.employeeName} has been successfully created${formData.isReloan ? ' as a reloan with previous balance zeroed' : ''}.`,
+      description: `Loan for ${formData.employeeName} has been successfully created${formData.isReloan ? ' as a reloan with previous balance zeroed and payments marked as paid' : ''}.`,
     });
 
     // Reset form
