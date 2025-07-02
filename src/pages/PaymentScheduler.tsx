@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -115,14 +114,29 @@ const PaymentScheduler = () => {
     return loan?.loanType || 'Unknown';
   };
 
-  const getDateReloan = (loanId: string) => {
-    const loan = loans.find(l => l.id === loanId);
-    // Return the exact dateReloan if it exists, otherwise return '-'
-    return loan?.dateReloan ? new Date(loan.dateReloan).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    }) : '-';
+  const getDateReloan = (paymentId: string) => {
+    const payment = filteredPayments.find(p => p.id === paymentId);
+    if (!payment) return '-';
+    
+    const loan = loans.find(l => l.id === payment.loanId);
+    if (!loan || !loan.dateReloan) return '-';
+    
+    // Only show the reloan date for the first payment of the loan (chronologically)
+    const loanPayments = filteredPayments
+      .filter(p => p.loanId === loan.id)
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+    
+    const isFirstPayment = loanPayments[0]?.id === paymentId;
+    
+    if (isFirstPayment) {
+      return new Date(loan.dateReloan).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+    
+    return '-';
   };
 
   const sortedPayments = filteredPayments.sort((a, b) => {
@@ -243,7 +257,7 @@ const PaymentScheduler = () => {
                         }) : '-'}
                       </TableCell>
                       <TableCell>
-                        {getDateReloan(payment.loanId)}
+                        {getDateReloan(payment.id)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">

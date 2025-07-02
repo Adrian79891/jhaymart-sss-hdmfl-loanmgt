@@ -40,14 +40,30 @@ const ReportGenerator = () => {
     const reportEndDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 0); // Last day of previous month
     
     // Filter active loans that have monthly amortizations due in the report period
+    // Include fully paid loans if their last payment was in the previous month
     // Exclude loans that have dateReloan (reloan records should not appear in report)
     const filteredLoans = loans.filter(loan => {
-      if (!loan.isActive || loan.remainingBalance <= 0 || loan.dateReloan) return false;
+      // Exclude reloan records
+      if (loan.dateReloan) return false;
       
       const loanStartDate = new Date(loan.startOfAmortization || loan.dateGranted);
       
-      // Check if the loan was active during the report month
-      return loanStartDate <= reportEndDate;
+      // Check if the loan was active during the report month OR if it's fully paid with last payment in previous month
+      const wasActiveDuringReportMonth = loanStartDate <= reportEndDate;
+      
+      // Check if loan is fully paid and last payment was in the previous month
+      const loanPayments = payments.filter(p => p.loanId === loan.id && p.isPaid);
+      let lastPaymentInPreviousMonth = false;
+      
+      if (loanPayments.length > 0) {
+        const lastPaidPayment = loanPayments.sort((a, b) => new Date(b.paidDate || '').getTime() - new Date(a.paidDate || '').getTime())[0];
+        if (lastPaidPayment && lastPaidPayment.paidDate) {
+          const lastPaymentDate = new Date(lastPaidPayment.paidDate);
+          lastPaymentInPreviousMonth = lastPaymentDate >= reportMonth && lastPaymentDate <= reportEndDate;
+        }
+      }
+      
+      return wasActiveDuringReportMonth || lastPaymentInPreviousMonth;
     });
 
     // Group loans by employee and calculate their latest monthly amortization based on Payment Scheduler
@@ -60,7 +76,7 @@ const ReportGenerator = () => {
         ? loanPayments.sort((a, b) => new Date(b.paidDate || '').getTime() - new Date(a.paidDate || '').getTime())[0]
         : null;
       
-      // Only include if there's a latest paid payment within the report period
+      // Include if there's a latest paid payment within the report period
       if (!latestPaidPayment) return acc;
       
       const latestPaidDate = new Date(latestPaidPayment.paidDate || '');
