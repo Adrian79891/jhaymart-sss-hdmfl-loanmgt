@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -116,6 +117,7 @@ const PaymentScheduler = () => {
 
   const getDateReloan = (loanId: string) => {
     const loan = loans.find(l => l.id === loanId);
+    // Return the exact dateReloan if it exists, otherwise return '-'
     return loan?.dateReloan ? new Date(loan.dateReloan).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',

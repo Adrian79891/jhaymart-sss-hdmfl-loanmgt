@@ -49,6 +49,9 @@ const NewlyGrantedLoansReport = () => {
         ? format(new Date(loan.payments[loan.payments.length - 1].dueDate), 'MMM dd, yyyy')
         : format(addMonths(new Date(loan.dateGranted), loan.loanTerm), 'MMM dd, yyyy');
 
+      // Format date of reloan if it exists
+      const dateReloan = loan.dateReloan ? format(new Date(loan.dateReloan), 'MMM dd, yyyy') : '-';
+
       return {
         employeeName: loan.employeeName,
         dateGranted: loan.dateGranted,
@@ -58,7 +61,9 @@ const NewlyGrantedLoansReport = () => {
         monthlyAmortization: loan.monthlyAmortization,
         loanType: loan.loanType,
         totalLoan: loan.totalLoan,
-        firstAmortizationDate: firstAmortizationDate
+        firstAmortizationDate: firstAmortizationDate,
+        isReloan: loan.isReloan,
+        dateReloan: dateReloan
       };
     });
 
@@ -95,14 +100,15 @@ const NewlyGrantedLoansReport = () => {
       { A: 'Newly Granted Loans' },
       { A: `Loans granted in ${data.previousMonth}` },
       { A: '' },
-      { A: 'Employee Name', B: 'Date Granted', C: 'Loan Term', D: 'Amortization Period', E: 'Principal Amount', F: 'Monthly Amortization' },
+      { A: 'Employee Name', B: 'Date Granted', C: 'Loan Term', D: 'Amortization Period', E: 'Principal Amount', F: 'Monthly Amortization', G: 'Date of Reloan' },
       ...data.employees.map((emp: any) => ({
         A: emp.employeeName,
         B: new Date(emp.dateGranted).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
         C: `${emp.loanTerm} months`,
         D: emp.amortizationPeriod,
         E: `₱${emp.principalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-        F: `₱${emp.monthlyAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+        F: `₱${emp.monthlyAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+        G: emp.dateReloan
       })),
       { A: '' },
       { A: `Total Employees: ${data.totalEmployees}` },
@@ -185,7 +191,7 @@ const NewlyGrantedLoansReport = () => {
 
         {showPreview && reportData && (
           <Dialog open={showPreview} onOpenChange={setShowPreview}>
-            <DialogContent className="max-w-6xl">
+            <DialogContent className="max-w-7xl">
               <DialogHeader>
                 <DialogTitle>Newly Granted Loans Report - Preview</DialogTitle>
               </DialogHeader>
@@ -206,6 +212,7 @@ const NewlyGrantedLoansReport = () => {
                         <th className="border border-gray-300 p-2 text-center">Amortization Period</th>
                         <th className="border border-gray-300 p-2 text-right">Principal Amount</th>
                         <th className="border border-gray-300 p-2 text-right">Monthly Amortization</th>
+                        <th className="border border-gray-300 p-2 text-center">Date of Reloan</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -226,6 +233,9 @@ const NewlyGrantedLoansReport = () => {
                           </td>
                           <td className="border border-gray-300 p-2 text-right">
                             ₱{employee.monthlyAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="border border-gray-300 p-2 text-center">
+                            {employee.dateReloan}
                           </td>
                         </tr>
                       ))}
