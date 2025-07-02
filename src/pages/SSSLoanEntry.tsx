@@ -25,7 +25,8 @@ const SSSLoanEntry = () => {
     loanTerm: '',
     monthlyAmortization: '',
     interest: '',
-    isReloan: false
+    isReloan: false,
+    dateReloan: ''
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -80,7 +81,8 @@ const SSSLoanEntry = () => {
       loanTerm: latestLoan.loanTerm.toString(),
       monthlyAmortization: latestLoan.monthlyAmortization.toString(),
       interest: latestLoan.interest.toString(),
-      isReloan: latestLoan.isReloan
+      isReloan: latestLoan.isReloan,
+      dateReloan: latestLoan.dateReloan || ''
     });
 
     setIsEditing(true);
@@ -150,7 +152,8 @@ const SSSLoanEntry = () => {
         loanTerm: '',
         monthlyAmortization: '',
         interest: '',
-        isReloan: false
+        isReloan: false,
+        dateReloan: ''
       });
       setIsEditing(false);
       setEditingLoanId(null);
@@ -169,6 +172,15 @@ const SSSLoanEntry = () => {
       toast({
         title: "Invalid Input",
         description: "Please check your numeric inputs.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.isReloan && !formData.dateReloan) {
+      toast({
+        title: "Date Required",
+        description: "Please enter the date of reloan when marking as reloan.",
         variant: "destructive",
       });
       return;
@@ -202,7 +214,8 @@ const SSSLoanEntry = () => {
           amortizationPeriod: calculations.amortizationPeriod,
           remainingBalance: calculations.remainingBalance,
           remainingMonths: calculations.remainingMonths,
-          isReloan: formData.isReloan
+          isReloan: formData.isReloan,
+          dateReloan: formData.isReloan && formData.dateReloan ? formData.dateReloan : undefined
         };
 
         updateLoan(updatedLoan);
@@ -271,6 +284,7 @@ const SSSLoanEntry = () => {
         remainingBalance: calculations.remainingBalance,
         remainingMonths: calculations.remainingMonths,
         isReloan: formData.isReloan,
+        dateReloan: formData.isReloan && formData.dateReloan ? formData.dateReloan : undefined,
         isActive: true,
         createdAt: new Date().toISOString()
       };
@@ -293,7 +307,8 @@ const SSSLoanEntry = () => {
       loanTerm: '',
       monthlyAmortization: '',
       interest: '',
-      isReloan: false
+      isReloan: false,
+      dateReloan: ''
     });
     setIsEditing(false);
     setEditingLoanId(null);
@@ -331,7 +346,7 @@ const SSSLoanEntry = () => {
           <CardContent>
             <div className="flex gap-2">
               <Input
-                value={searchEmployee}
+                value={searchEmployee} 
                 onChange={(e) => setSearchEmployee(e.target.value)}
                 placeholder="Enter employee name to search and edit"
                 className="flex-1"
@@ -454,6 +469,19 @@ const SSSLoanEntry = () => {
                   Mark as Reloan (will deactivate existing loan and zero balance)
                 </Label>
               </div>
+
+              {formData.isReloan && (
+                <div className="space-y-2">
+                  <Label htmlFor="dateReloan">Date of Reloan *</Label>
+                  <Input
+                    id="dateReloan"
+                    type="date"
+                    value={formData.dateReloan}
+                    onChange={(e) => handleInputChange('dateReloan', e.target.value)}
+                    required={formData.isReloan}
+                  />
+                </div>
+              )}
 
               <div className="pt-4 flex space-x-2">
                 <Button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700">

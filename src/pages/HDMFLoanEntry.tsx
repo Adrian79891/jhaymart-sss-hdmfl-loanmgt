@@ -25,7 +25,8 @@ const HDMFLoanEntry = () => {
     loanTerm: '',
     monthlyAmortization: '',
     interest: '',
-    isReloan: false
+    isReloan: false,
+    dateReloan: ''
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -80,7 +81,8 @@ const HDMFLoanEntry = () => {
       loanTerm: latestLoan.loanTerm.toString(),
       monthlyAmortization: latestLoan.monthlyAmortization.toString(),
       interest: latestLoan.interest > 0 ? latestLoan.interest.toString() : '',
-      isReloan: latestLoan.isReloan
+      isReloan: latestLoan.isReloan,
+      dateReloan: latestLoan.dateReloan || ''
     });
 
     setIsEditing(true);
@@ -156,7 +158,8 @@ const HDMFLoanEntry = () => {
         loanTerm: '',
         monthlyAmortization: '',
         interest: '',
-        isReloan: false
+        isReloan: false,
+        dateReloan: ''
       });
       setIsEditing(false);
       setEditingLoanId(null);
@@ -184,6 +187,15 @@ const HDMFLoanEntry = () => {
       toast({
         title: "Invalid Interest",
         description: "Please enter a valid interest amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.isReloan && !formData.dateReloan) {
+      toast({
+        title: "Date Required",
+        description: "Please enter the date of reloan when marking as reloan.",
         variant: "destructive",
       });
       return;
@@ -228,7 +240,8 @@ const HDMFLoanEntry = () => {
           amortizationPeriod: calculations.amortizationPeriod,
           remainingBalance: finalTotalLoan,
           remainingMonths: calculations.remainingMonths,
-          isReloan: formData.isReloan
+          isReloan: formData.isReloan,
+          dateReloan: formData.isReloan && formData.dateReloan ? formData.dateReloan : undefined
         };
 
         updateLoan(updatedLoan);
@@ -297,6 +310,7 @@ const HDMFLoanEntry = () => {
         remainingBalance: finalTotalLoan,
         remainingMonths: calculations.remainingMonths,
         isReloan: formData.isReloan,
+        dateReloan: formData.isReloan && formData.dateReloan ? formData.dateReloan : undefined,
         isActive: true,
         createdAt: new Date().toISOString()
       };
@@ -319,7 +333,8 @@ const HDMFLoanEntry = () => {
       loanTerm: '',
       monthlyAmortization: '',
       interest: '',
-      isReloan: false
+      isReloan: false,
+      dateReloan: ''
     });
     setIsEditing(false);
     setEditingLoanId(null);
@@ -494,6 +509,19 @@ const HDMFLoanEntry = () => {
                   Mark as Reloan (will deactivate existing loan and zero balance)
                 </Label>
               </div>
+
+              {formData.isReloan && (
+                <div className="space-y-2">
+                  <Label htmlFor="dateReloan">Date of Reloan *</Label>
+                  <Input
+                    id="dateReloan"
+                    type="date"
+                    value={formData.dateReloan}
+                    onChange={(e) => handleInputChange('dateReloan', e.target.value)}
+                    required={formData.isReloan}
+                  />
+                </div>
+              )}
 
               <div className="pt-4">
                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">

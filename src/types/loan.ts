@@ -15,6 +15,7 @@ export interface Loan {
   remainingBalance: number;
   remainingMonths: number;
   isReloan: boolean;
+  dateReloan?: string; // New field for reloan date
   isActive: boolean;
   createdAt: string;
   payments?: Payment[];

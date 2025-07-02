@@ -21,17 +21,17 @@ const PaymentScheduler = () => {
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/');
-      return;
-    }
-
     const allLoans = getLoans();
     const allPayments = getPayments();
     setLoans(allLoans);
     setPayments(allPayments);
     setFilteredPayments(allPayments);
-  }, [isAuthenticated, navigate]);
+  }, []);
+
+  if (!isAuthenticated) {
+    navigate('/');
+    return null;
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,13 +114,18 @@ const PaymentScheduler = () => {
     return loan?.loanType || 'Unknown';
   };
 
+  const getDateReloan = (loanId: string) => {
+    const loan = loans.find(l => l.id === loanId);
+    return loan?.dateReloan ? new Date(loan.dateReloan).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }) : '-';
+  };
+
   const sortedPayments = filteredPayments.sort((a, b) => {
     return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
   });
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
@@ -192,6 +197,7 @@ const PaymentScheduler = () => {
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Date Paid</TableHead>
+                    <TableHead>Date Reloan</TableHead>
                     <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -233,6 +239,9 @@ const PaymentScheduler = () => {
                           month: 'short',
                           day: 'numeric'
                         }) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {getDateReloan(payment.loanId)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">

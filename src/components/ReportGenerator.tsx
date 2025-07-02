@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { getLoans } from '@/utils/storage';
+import { getLoans, getPayments } from '@/utils/storage';
 import PrintPreview from './PrintPreview';
 import * as XLSX from 'xlsx';
 
@@ -33,14 +33,16 @@ const ReportGenerator = () => {
     }
 
     const loans = getLoans();
+    const payments = getPayments();
     
     // Calculate the report period - use the first day of the previous month from selected date
     const reportMonth = new Date(fromDate.getFullYear(), fromDate.getMonth() - 1, 1);
     const reportEndDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 0); // Last day of previous month
     
     // Filter active loans that have monthly amortizations due in the report period
+    // Exclude loans that have dateReloan (reloan records should not appear in report)
     const filteredLoans = loans.filter(loan => {
-      if (!loan.isActive || loan.remainingBalance <= 0) return false;
+      if (!loan.isActive || loan.remainingBalance <= 0 || loan.dateReloan) return false;
       
       const loanStartDate = new Date(loan.startOfAmortization || loan.dateGranted);
       
@@ -48,9 +50,22 @@ const ReportGenerator = () => {
       return loanStartDate <= reportEndDate;
     });
 
-    // Group loans by employee
+    // Group loans by employee and calculate their latest monthly amortization based on Payment Scheduler
     const employeeLoans = filteredLoans.reduce((acc, loan) => {
       const employeeName = loan.employeeName;
+      
+      // Get the latest paid payment for this loan from Payment Scheduler
+      const loanPayments = payments.filter(p => p.loanId === loan.id && p.isPaid);
+      const latestPaidPayment = loanPayments.length > 0 
+        ? loanPayments.sort((a, b) => new Date(b.paidDate || '').getTime() - new Date(a.paidDate || '').getTime())[0]
+        : null;
+      
+      // Only include if there's a latest paid payment within the report period
+      if (!latestPaidPayment) return acc;
+      
+      const latestPaidDate = new Date(latestPaidPayment.paidDate || '');
+      if (latestPaidDate < reportMonth || latestPaidDate > reportEndDate) return acc;
+
       if (!acc[employeeName]) {
         acc[employeeName] = {
           employeeName,
@@ -60,10 +75,11 @@ const ReportGenerator = () => {
         };
       }
 
+      // Use the actual payment amount from the latest paid payment
       if (loan.loanType === 'SSS') {
-        acc[employeeName].sssAmortization += loan.monthlyAmortization;
+        acc[employeeName].sssAmortization += latestPaidPayment.amount;
       } else if (loan.loanType === 'HDMF') {
-        acc[employeeName].hdmfAmortization += loan.monthlyAmortization;
+        acc[employeeName].hdmfAmortization += latestPaidPayment.amount;
       }
 
       acc[employeeName].loans.push(loan);
