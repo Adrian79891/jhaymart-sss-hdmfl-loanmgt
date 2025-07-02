@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DatePicker } from '@/components/ui/date-picker';
 import { ArrowLeft, Save, UserX, Edit, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -40,6 +41,13 @@ const HDMFLoanEntry = () => {
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDateReloanChange = (date: Date | undefined) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      dateReloan: date ? date.toISOString().split('T')[0] : '' 
+    }));
   };
 
   const handleSearchEmployee = () => {
@@ -513,12 +521,10 @@ const HDMFLoanEntry = () => {
               {formData.isReloan && (
                 <div className="space-y-2">
                   <Label htmlFor="dateReloan">Date of Reloan *</Label>
-                  <Input
-                    id="dateReloan"
-                    type="date"
-                    value={formData.dateReloan}
-                    onChange={(e) => handleInputChange('dateReloan', e.target.value)}
-                    required={formData.isReloan}
+                  <DatePicker
+                    date={formData.dateReloan ? new Date(formData.dateReloan) : undefined}
+                    onDateChange={handleDateReloanChange}
+                    placeholder="Select date of reloan"
                   />
                 </div>
               )}
