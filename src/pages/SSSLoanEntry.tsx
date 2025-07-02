@@ -1,12 +1,11 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Save, Trash } from 'lucide-react';
+import { ArrowLeft, Save, Trash, Edit, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { addLoan, getLoans, updateLoan, getSettings, deleteLoan, getPayments, savePayments } from '@/utils/storage';
@@ -29,6 +28,10 @@ const SSSLoanEntry = () => {
     isReloan: false
   });
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingLoanId, setEditingLoanId] = useState<string | null>(null);
+  const [searchEmployee, setSearchEmployee] = useState('');
+
   if (!isAuthenticated) {
     navigate('/');
     return null;
@@ -36,6 +39,57 @@ const SSSLoanEntry = () => {
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSearchEmployee = () => {
+    if (!searchEmployee.trim()) {
+      toast({
+        title: "Search Required",
+        description: "Please enter an employee name to search.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const loans = getLoans();
+    const employeeSSLoans = loans.filter(
+      loan => loan.employeeName.toLowerCase().includes(searchEmployee.toLowerCase()) && 
+              loan.loanType === 'SSS' && 
+              loan.isActive
+    );
+
+    if (employeeSSLoans.length === 0) {
+      toast({
+        title: "No Loans Found",
+        description: `No active SSS loans found for ${searchEmployee}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Get the most recent loan for editing
+    const latestLoan = employeeSSLoans.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+
+    setFormData({
+      employeeName: latestLoan.employeeName,
+      department: latestLoan.department,
+      dateGranted: latestLoan.dateGranted,
+      principalAmount: latestLoan.principalAmount.toString(),
+      loanTerm: latestLoan.loanTerm.toString(),
+      monthlyAmortization: latestLoan.monthlyAmortization.toString(),
+      interest: latestLoan.interest.toString(),
+      isReloan: latestLoan.isReloan
+    });
+
+    setIsEditing(true);
+    setEditingLoanId(latestLoan.id);
+
+    toast({
+      title: "Loan Loaded",
+      description: `Loaded loan for ${latestLoan.employeeName} for editing.`,
+    });
   };
 
   const handleDelete = () => {
@@ -48,8 +102,10 @@ const SSSLoanEntry = () => {
       return;
     }
 
-    if (confirm(`Are you sure you want to delete all SSS loans for ${formData.employeeName}?`)) {
+    if (confirm(`Are you sure you want to delete SSS loan data for ${formData.employeeName}? This will only delete unpaid payments, paid payments will remain.`)) {
       const loans = getLoans();
+      const payments = getPayments();
+      
       const employeeSSLoans = loans.filter(
         loan => loan.employeeName.toLowerCase() === formData.employeeName.toLowerCase() && 
                 loan.loanType === 'SSS'
@@ -64,13 +120,25 @@ const SSSLoanEntry = () => {
         return;
       }
 
+      // Delete loans and only unpaid payments
       employeeSSLoans.forEach(loan => {
         deleteLoan(loan.id);
       });
 
+      // Filter out only unpaid payments for these loans, keep paid ones
+      const loanIds = employeeSSLoans.map(loan => loan.id);
+      const updatedPayments = payments.filter(payment => {
+        if (loanIds.includes(payment.loanId)) {
+          return payment.isPaid; // Keep only paid payments
+        }
+        return true; // Keep all other payments
+      });
+
+      savePayments(updatedPayments);
+
       toast({
         title: "SSS Loans Deleted",
-        description: `Deleted ${employeeSSLoans.length} SSS loan(s) for ${formData.employeeName}.`,
+        description: `Deleted ${employeeSSLoans.length} SSS loan(s) for ${formData.employeeName}. Paid payments were preserved.`,
       });
 
       // Reset form
@@ -84,6 +152,8 @@ const SSSLoanEntry = () => {
         interest: '',
         isReloan: false
       });
+      setIsEditing(false);
+      setEditingLoanId(null);
     }
   };
 
@@ -112,74 +182,107 @@ const SSSLoanEntry = () => {
       'SSS'
     );
 
-    // Handle reloan logic - mark existing loans as inactive, zero balance, and mark payments as paid
-    if (formData.isReloan) {
+    if (isEditing && editingLoanId) {
+      // Update existing loan
       const existingLoans = getLoans();
-      const existingPayments = getPayments();
+      const loanToUpdate = existingLoans.find(loan => loan.id === editingLoanId);
       
-      const employeeLoans = existingLoans.filter(
-        loan => loan.employeeName.toLowerCase() === formData.employeeName.toLowerCase() && 
-                loan.loanType === 'SSS' && 
-                loan.isActive
-      );
-      
-      // Mark existing loans as inactive and zero out remaining balance
-      employeeLoans.forEach(loan => {
-        updateLoan({ 
-          ...loan, 
-          isActive: false, 
-          remainingBalance: 0,
-          remainingMonths: 0
+      if (loanToUpdate) {
+        const updatedLoan: Loan = {
+          ...loanToUpdate,
+          employeeName: formData.employeeName,
+          department: formData.department,
+          dateGranted: formData.dateGranted,
+          principalAmount,
+          loanTerm,
+          monthlyAmortization,
+          totalLoan: calculations.totalLoan,
+          interest: Math.round(interest * 100) / 100,
+          startOfAmortization: calculations.startOfAmortization,
+          amortizationPeriod: calculations.amortizationPeriod,
+          remainingBalance: calculations.remainingBalance,
+          remainingMonths: calculations.remainingMonths,
+          isReloan: formData.isReloan
+        };
+
+        updateLoan(updatedLoan);
+
+        toast({
+          title: "SSS Loan Updated",
+          description: `Loan for ${formData.employeeName} has been successfully updated.`,
         });
+      }
+    } else {
+      // Handle reloan logic - mark existing loans as inactive, zero balance, and mark payments as paid
+      if (formData.isReloan) {
+        const existingLoans = getLoans();
+        const existingPayments = getPayments();
+        
+        const employeeLoans = existingLoans.filter(
+          loan => loan.employeeName.toLowerCase() === formData.employeeName.toLowerCase() && 
+                  loan.loanType === 'SSS' && 
+                  loan.isActive
+        );
+        
+        // Mark existing loans as inactive and zero out remaining balance
+        employeeLoans.forEach(loan => {
+          updateLoan({ 
+            ...loan, 
+            isActive: false, 
+            remainingBalance: 0,
+            remainingMonths: 0
+          });
+        });
+        
+        // Mark all payments for existing loans as paid
+        const updatedPayments = existingPayments.map(payment => {
+          const isPaymentForExistingLoan = employeeLoans.some(loan => loan.id === payment.loanId);
+          if (isPaymentForExistingLoan && !payment.isPaid) {
+            return {
+              ...payment,
+              isPaid: true,
+              paidDate: new Date().toISOString().split('T')[0]
+            };
+          }
+          return payment;
+        });
+        
+        // Save updated payments
+        savePayments(updatedPayments);
+        
+        console.log(`Marked ${employeeLoans.length} existing SSS loans as inactive for reloan`);
+        console.log(`Marked payments as paid for existing loans`);
+      }
+
+      // Create new loan
+      const newLoan: Loan = {
+        id: `SSS_${Date.now()}`,
+        employeeName: formData.employeeName,
+        department: formData.department,
+        loanType: 'SSS',
+        dateGranted: formData.dateGranted,
+        principalAmount,
+        loanTerm,
+        monthlyAmortization,
+        totalLoan: calculations.totalLoan,
+        interest: Math.round(interest * 100) / 100,
+        startOfAmortization: calculations.startOfAmortization,
+        amortizationPeriod: calculations.amortizationPeriod,
+        remainingBalance: calculations.remainingBalance,
+        remainingMonths: calculations.remainingMonths,
+        isReloan: formData.isReloan,
+        isActive: true,
+        createdAt: new Date().toISOString()
+      };
+
+      console.log('Creating SSS loan with auto-payment calculation:', settings.autoCalculatePastPayments);
+      addLoan(newLoan);
+
+      toast({
+        title: "SSS Loan Created",
+        description: `Loan for ${formData.employeeName} has been successfully created${formData.isReloan ? ' as a reloan with previous balance zeroed and payments marked as paid' : ''}.`,
       });
-      
-      // Mark all payments for existing loans as paid
-      const updatedPayments = existingPayments.map(payment => {
-        const isPaymentForExistingLoan = employeeLoans.some(loan => loan.id === payment.loanId);
-        if (isPaymentForExistingLoan && !payment.isPaid) {
-          return {
-            ...payment,
-            isPaid: true,
-            paidDate: new Date().toISOString().split('T')[0]
-          };
-        }
-        return payment;
-      });
-      
-      // Save updated payments
-      savePayments(updatedPayments);
-      
-      console.log(`Marked ${employeeLoans.length} existing SSS loans as inactive for reloan`);
-      console.log(`Marked payments as paid for existing loans`);
     }
-
-    const newLoan: Loan = {
-      id: `SSS_${Date.now()}`,
-      employeeName: formData.employeeName,
-      department: formData.department,
-      loanType: 'SSS',
-      dateGranted: formData.dateGranted,
-      principalAmount,
-      loanTerm,
-      monthlyAmortization,
-      totalLoan: calculations.totalLoan,
-      interest: Math.round(interest * 100) / 100,
-      startOfAmortization: calculations.startOfAmortization,
-      amortizationPeriod: calculations.amortizationPeriod,
-      remainingBalance: calculations.remainingBalance,
-      remainingMonths: calculations.remainingMonths,
-      isReloan: formData.isReloan,
-      isActive: true,
-      createdAt: new Date().toISOString()
-    };
-
-    console.log('Creating SSS loan with auto-payment calculation:', settings.autoCalculatePastPayments);
-    addLoan(newLoan);
-
-    toast({
-      title: "SSS Loan Created",
-      description: `Loan for ${formData.employeeName} has been successfully created${formData.isReloan ? ' as a reloan with previous balance zeroed and payments marked as paid' : ''}.`,
-    });
 
     // Reset form
     setFormData({
@@ -192,6 +295,8 @@ const SSSLoanEntry = () => {
       interest: '',
       isReloan: false
     });
+    setIsEditing(false);
+    setEditingLoanId(null);
   };
 
   return (
@@ -207,7 +312,7 @@ const SSSLoanEntry = () => {
             Back to Dashboard
           </Button>
           <h1 className="text-3xl font-bold text-gray-900">SSS Loan Entry</h1>
-          <p className="text-gray-600">Create a new SSS loan application</p>
+          <p className="text-gray-600">{isEditing ? 'Edit existing' : 'Create a new'} SSS loan application</p>
           {settings.autoCalculatePastPayments && (
             <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
               ✅ Smart payment calculation enabled - past due payments will be auto-marked as paid
@@ -215,13 +320,37 @@ const SSSLoanEntry = () => {
           )}
         </div>
 
+        {/* Search Employee Section */}
+        <Card className="shadow-lg mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Search className="h-5 w-5 text-green-600" />
+              <span>Search Employee for Edit</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <Input
+                value={searchEmployee}
+                onChange={(e) => setSearchEmployee(e.target.value)}
+                placeholder="Enter employee name to search and edit"
+                className="flex-1"
+              />
+              <Button onClick={handleSearchEmployee} variant="outline">
+                <Search className="h-4 w-4 mr-2" />
+                Search & Edit
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">S</span>
               </div>
-              <span>SSS Loan Application</span>
+              <span>{isEditing ? 'Edit SSS Loan' : 'SSS Loan Application'}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -328,8 +457,8 @@ const SSSLoanEntry = () => {
 
               <div className="pt-4 flex space-x-2">
                 <Button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700">
-                  <Save className="h-4 w-4 mr-2" />
-                  Create SSS Loan
+                  {isEditing ? <Edit className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                  {isEditing ? 'Update SSS Loan' : 'Create SSS Loan'}
                 </Button>
                 <Button 
                   type="button" 

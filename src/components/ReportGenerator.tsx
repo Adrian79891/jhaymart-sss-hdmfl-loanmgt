@@ -34,17 +34,18 @@ const ReportGenerator = () => {
 
     const loans = getLoans();
     
-    // Get the previous month from the selected date range for the report period
+    // Calculate the report period - use the first day of the previous month from selected date
     const reportMonth = new Date(fromDate.getFullYear(), fromDate.getMonth() - 1, 1);
+    const reportEndDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 0); // Last day of previous month
     
-    // Filter active loans that have monthly amortizations due in the previous month
+    // Filter active loans that have monthly amortizations due in the report period
     const filteredLoans = loans.filter(loan => {
       if (!loan.isActive || loan.remainingBalance <= 0) return false;
       
       const loanStartDate = new Date(loan.startOfAmortization || loan.dateGranted);
       
-      // Check if the loan was active during the report month (previous month)
-      return loanStartDate <= reportMonth;
+      // Check if the loan was active during the report month
+      return loanStartDate <= reportEndDate;
     });
 
     // Group loans by employee
@@ -84,9 +85,9 @@ const ReportGenerator = () => {
     });
 
     return {
-      fromDate: format(fromDate, 'MMMM dd, yyyy'),
-      toDate: format(toDate, 'MMMM dd, yyyy'),
-      reportPeriod: format(reportMonth, 'MMMM yyyy'), // Show previous month
+      fromDate: format(reportMonth, 'MMMM dd, yyyy'), // First day of report month
+      toDate: format(reportEndDate, 'MMMM dd, yyyy'), // Last day of report month
+      reportPeriod: format(reportMonth, 'MMMM yyyy'), // Show report month
       employees: employeeData,
       totalSSSAmortization: Math.round(totalSSSAmortization * 100) / 100,
       totalHDMFAmortization: Math.round(totalHDMFAmortization * 100) / 100,
