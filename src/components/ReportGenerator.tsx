@@ -39,12 +39,33 @@ const ReportGenerator = () => {
     const reportMonth = new Date(fromDate.getFullYear(), fromDate.getMonth() - 1, 1);
     const reportEndDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 0); // Last day of previous month
     
-    // Filter active loans that have monthly amortizations due in the report period
-    // Include fully paid loans if their last payment was in the previous month
-    // Exclude loans that have dateReloan (reloan records should not appear in report)
+    // Get employees who reloaned in the previous month (should be excluded from current month report)
+    const employeesWhoReloanedLastMonth = new Set<string>();
+    loans.forEach(loan => {
+      if (loan.dateReloan) {
+        const reloanDate = new Date(loan.dateReloan);
+        if (reloanDate >= reportMonth && reloanDate <= reportEndDate) {
+          employeesWhoReloanedLastMonth.add(loan.employeeName);
+        }
+      }
+    });
+
+    // Filter loans based on new logic
     const filteredLoans = loans.filter(loan => {
-      // Exclude reloan records
-      if (loan.dateReloan) return false;
+      // Exclude employees who reloaned in the previous month
+      if (employeesWhoReloanedLastMonth.has(loan.employeeName)) {
+        return false;
+      }
+
+      // For reloaned loans, check if their amortization period overlaps with report period
+      if (loan.dateReloan && loan.startOfAmortization) {
+        const amortizationStart = new Date(loan.startOfAmortization);
+        // Only include if amortization started in or before the report period
+        return amortizationStart <= reportEndDate;
+      }
+
+      // For non-reloaned loans, use existing logic
+      if (loan.dateReloan) return false; // Exclude reloan records that don't meet above criteria
       
       const loanStartDate = new Date(loan.startOfAmortization || loan.dateGranted);
       

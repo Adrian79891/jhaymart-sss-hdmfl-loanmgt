@@ -92,9 +92,60 @@ export const saveSettings = (settings: any) => {
   backupToSession(SETTINGS_KEY, settings);
 };
 
+const markExistingLoansAsPaid = (employeeName: string, reloanDate: string) => {
+  const loans = getLoans();
+  const payments = getPayments();
+  
+  // Find all existing loans for this employee (exclude the current reloan)
+  const existingLoans = loans.filter(loan => 
+    loan.employeeName === employeeName && 
+    !loan.dateReloan && 
+    loan.isActive
+  );
+  
+  console.log(`Marking existing loans as paid for ${employeeName} due to reloan on ${reloanDate}`);
+  
+  existingLoans.forEach(loan => {
+    // Get all unpaid payments for this loan
+    const loanPayments = payments.filter(p => p.loanId === loan.id);
+    
+    // Mark all payments as paid with the reloan date
+    loanPayments.forEach(payment => {
+      if (!payment.isPaid) {
+        payment.isPaid = true;
+        payment.paidDate = reloanDate;
+      }
+    });
+    
+    // Update loan balances to reflect fully paid status
+    const balances = updateLoanBalances(
+      loan.id,
+      loan.totalLoan,
+      loan.monthlyAmortization,
+      loanPayments
+    );
+    
+    // Update the loan
+    loan.remainingBalance = 0;
+    loan.remainingMonths = 0;
+    
+    console.log(`Marked loan ${loan.id} as fully paid due to reloan`);
+  });
+  
+  // Save updated data
+  saveLoans(loans);
+  savePayments(payments);
+};
+
 export const addLoan = (loan: Loan) => {
   const loans = getLoans();
   const settings = getSettings();
+  
+  // If this is a reloan, mark all existing loans for this employee as paid
+  if (loan.isReloan && loan.dateReloan) {
+    markExistingLoansAsPaid(loan.employeeName, loan.dateReloan);
+    console.log(`Processed reloan for ${loan.employeeName} - existing loans marked as paid`);
+  }
   
   // Generate payments with auto-marking logic
   const payments = generateAndMarkPayments(
