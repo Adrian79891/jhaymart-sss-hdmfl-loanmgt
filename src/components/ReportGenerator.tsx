@@ -39,29 +39,34 @@ const ReportGenerator = () => {
     const reportMonth = new Date(fromDate.getFullYear(), fromDate.getMonth() - 1, 1);
     const reportEndDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 0); // Last day of previous month
     
-    // Get employees who reloaned in the previous month (should be excluded from current month report)
-    const employeesWhoReloanedLastMonth = new Set<string>();
+    // Get employees who reloaned specific loan types in the previous month
+    const employeeReloansByType = new Map<string, Set<string>>();
     loans.forEach(loan => {
       if (loan.dateReloan) {
         const reloanDate = new Date(loan.dateReloan);
         if (reloanDate >= reportMonth && reloanDate <= reportEndDate) {
-          employeesWhoReloanedLastMonth.add(loan.employeeName);
+          const key = `${loan.employeeName}_${loan.loanType}`;
+          if (!employeeReloansByType.has(loan.employeeName)) {
+            employeeReloansByType.set(loan.employeeName, new Set());
+          }
+          employeeReloansByType.get(loan.employeeName)!.add(loan.loanType);
         }
       }
     });
 
     // Filter loans based on new logic
     const filteredLoans = loans.filter(loan => {
-      // Exclude employees who reloaned in the previous month
-      if (employeesWhoReloanedLastMonth.has(loan.employeeName)) {
-        return false;
-      }
-
-      // For reloaned loans, check if their amortization period overlaps with report period
-      if (loan.dateReloan && loan.startOfAmortization) {
-        const amortizationStart = new Date(loan.startOfAmortization);
-        // Only include if amortization started in or before the report period
-        return amortizationStart <= reportEndDate;
+      // Check if this specific employee reloaned this specific loan type in the previous month
+      const employeeReloans = employeeReloansByType.get(loan.employeeName);
+      if (employeeReloans && employeeReloans.has(loan.loanType)) {
+        // Employee reloaned this loan type last month, exclude unless it's the new reloaned loan
+        // For reloaned loans, check if their amortization period overlaps with report period
+        if (loan.dateReloan && loan.startOfAmortization) {
+          const amortizationStart = new Date(loan.startOfAmortization);
+          // Only include if amortization started in or before the report period
+          return amortizationStart <= reportEndDate;
+        }
+        return false; // Exclude old loans of this type
       }
 
       // For non-reloaned loans, use existing logic
