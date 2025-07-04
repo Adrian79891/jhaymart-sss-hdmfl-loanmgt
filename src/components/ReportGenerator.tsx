@@ -39,15 +39,28 @@ const ReportGenerator = () => {
     const reportMonth = new Date(fromDate.getFullYear(), fromDate.getMonth() - 1, 1);
     const reportEndDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 0); // Last day of previous month
     
-    // Filter loans based on whether they should appear in the report
-    const filteredLoans = loans.filter(loan => {
+    console.log('Report period:', format(reportMonth, 'yyyy-MM-dd'), 'to', format(reportEndDate, 'yyyy-MM-dd'));
+    
+    // Filter loans - only include ACTIVE loans
+    const activeLoans = loans.filter(loan => loan.isActive);
+    console.log('Active loans found:', activeLoans.length);
+    
+    const filteredLoans = activeLoans.filter(loan => {
       // Check if loan is fully paid
       const loanPayments = payments.filter(p => p.loanId === loan.id && p.isPaid);
       const unpaidPayments = payments.filter(p => p.loanId === loan.id && !p.isPaid);
       
-      // If loan is fully paid (no unpaid payments), don't include it
+      // If loan is fully paid (no unpaid payments), include it only for the last month it was paid
       if (unpaidPayments.length === 0 && loanPayments.length > 0) {
-        return false;
+        // Get the last payment date
+        const lastPaymentDate = new Date(Math.max(...loanPayments
+          .filter(p => p.paidDate)
+          .map(p => new Date(p.paidDate!).getTime())));
+        
+        // Include if the last payment was made during the report month
+        const wasPaymentInReportMonth = lastPaymentDate >= reportMonth && lastPaymentDate <= reportEndDate;
+        console.log(`Fully paid loan ${loan.id} - last payment: ${format(lastPaymentDate, 'yyyy-MM-dd')}, include in report: ${wasPaymentInReportMonth}`);
+        return wasPaymentInReportMonth;
       }
       
       // Determine the effective start date for the loan
@@ -56,11 +69,13 @@ const ReportGenerator = () => {
       if (loan.isReloan && loan.dateReloan) {
         // For reloans, use the Date of Reloan as the new basis
         effectiveStartDate = new Date(loan.dateReloan);
-        // Add 2 months to get the actual amortization start date (same logic as original loans)
+        // Add 2 months to get the actual amortization start date
         effectiveStartDate.setMonth(effectiveStartDate.getMonth() + 2);
+        console.log(`Reloan ${loan.id} - Date of Reloan: ${loan.dateReloan}, Effective start: ${format(effectiveStartDate, 'yyyy-MM-dd')}`);
       } else {
         // For regular loans, use the amortization start date or date granted
         effectiveStartDate = new Date(loan.startOfAmortization || loan.dateGranted);
+        console.log(`Regular loan ${loan.id} - Effective start: ${format(effectiveStartDate, 'yyyy-MM-dd')}`);
       }
       
       // Check if the loan's amortization period overlaps with or starts before the report period
@@ -73,8 +88,13 @@ const ReportGenerator = () => {
         return paymentDate >= reportMonth && paymentDate <= reportEndDate;
       });
       
-      return loanIsActiveInReportPeriod || hasPaymentsInReportMonth;
+      const shouldInclude = loanIsActiveInReportPeriod || hasPaymentsInReportMonth;
+      console.log(`Loan ${loan.id} - Active in period: ${loanIsActiveInReportPeriod}, Has payments: ${hasPaymentsInReportMonth}, Include: ${shouldInclude}`);
+      
+      return shouldInclude;
     });
+
+    console.log('Filtered loans for report:', filteredLoans.length);
 
     // Group loans by employee and calculate their monthly amortization
     const employeeLoans = filteredLoans.reduce((acc, loan) => {
@@ -97,6 +117,7 @@ const ReportGenerator = () => {
       if (paymentsInReportMonth.length > 0) {
         // Use the sum of payments made in the report month
         amortizationAmount = paymentsInReportMonth.reduce((sum, payment) => sum + payment.amount, 0);
+        console.log(`Employee ${employeeName} - Using actual payments: ₱${amortizationAmount}`);
       } else {
         // Use monthly amortization if loan should be active during report period
         let effectiveStartDate: Date;
@@ -105,19 +126,25 @@ const ReportGenerator = () => {
           // For reloans, calculate start date from Date of Reloan
           effectiveStartDate = new Date(loan.dateReloan);
           effectiveStartDate.setMonth(effectiveStartDate.getMonth() + 2);
+          console.log(`Reloan ${loan.id} - Using new monthly amortization: ₱${loan.monthlyAmortization}`);
         } else {
           // For regular loans, use existing logic
           effectiveStartDate = new Date(loan.startOfAmortization || loan.dateGranted);
+          console.log(`Regular loan ${loan.id} - Using monthly amortization: ₱${loan.monthlyAmortization}`);
         }
         
         if (effectiveStartDate <= reportEndDate && loan.remainingBalance > 0) {
           // For reloans, use the current monthly amortization (which should be the new amount)
+          // For regular loans, use their monthly amortization
           amortizationAmount = loan.monthlyAmortization;
         }
       }
       
       // Skip if no amortization amount
-      if (amortizationAmount === 0) return acc;
+      if (amortizationAmount === 0) {
+        console.log(`Skipping ${employeeName} - no amortization amount`);
+        return acc;
+      }
 
       if (!acc[employeeName]) {
         acc[employeeName] = {
@@ -132,12 +159,14 @@ const ReportGenerator = () => {
       // Add amortization based on loan type
       if (loan.loanType === 'SSS') {
         acc[employeeName].sssAmortization += amortizationAmount;
+        console.log(`Added SSS amortization for ${employeeName}: ₱${amortizationAmount}`);
       } else if (loan.loanType === 'HDMF') {
         acc[employeeName].hdmfAmortization += amortizationAmount;
         // Set Pag-IBIG ID Number if this is an HDMF loan
         if (loan.pagibigIdNumber) {
           acc[employeeName].pagibigIdNumber = loan.pagibigIdNumber;
         }
+        console.log(`Added HDMF amortization for ${employeeName}: ₱${amortizationAmount}`);
       }
 
       acc[employeeName].loans.push(loan);
@@ -145,6 +174,7 @@ const ReportGenerator = () => {
     }, {} as any);
 
     const employeeData = Object.values(employeeLoans);
+    console.log('Final employee data:', employeeData);
 
     // Calculate totals
     let totalSSSAmortization = 0;
