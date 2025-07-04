@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,74 +39,75 @@ const ReportGenerator = () => {
     const reportMonth = new Date(fromDate.getFullYear(), fromDate.getMonth() - 1, 1);
     const reportEndDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 0); // Last day of previous month
     
-    // Get employees who reloaned specific loan types in the previous month
-    const employeeReloansByType = new Map<string, Set<string>>();
-    loans.forEach(loan => {
-      if (loan.dateReloan) {
-        const reloanDate = new Date(loan.dateReloan);
-        if (reloanDate >= reportMonth && reloanDate <= reportEndDate) {
-          const key = `${loan.employeeName}_${loan.loanType}`;
-          if (!employeeReloansByType.has(loan.employeeName)) {
-            employeeReloansByType.set(loan.employeeName, new Set());
-          }
-          employeeReloansByType.get(loan.employeeName)!.add(loan.loanType);
-        }
-      }
-    });
-
-    // Filter loans based on new logic
+    // Filter loans based on whether they should appear in the report
     const filteredLoans = loans.filter(loan => {
-      // Check if this specific employee reloaned this specific loan type in the previous month
-      const employeeReloans = employeeReloansByType.get(loan.employeeName);
-      if (employeeReloans && employeeReloans.has(loan.loanType)) {
-        // Employee reloaned this loan type last month, exclude unless it's the new reloaned loan
-        // For reloaned loans, check if their amortization period overlaps with report period
-        if (loan.dateReloan && loan.startOfAmortization) {
-          const amortizationStart = new Date(loan.startOfAmortization);
-          // Only include if amortization started in or before the report period
-          return amortizationStart <= reportEndDate;
-        }
-        return false; // Exclude old loans of this type
-      }
-
-      // For non-reloaned loans, use existing logic
-      if (loan.dateReloan) return false; // Exclude reloan records that don't meet above criteria
-      
-      const loanStartDate = new Date(loan.startOfAmortization || loan.dateGranted);
-      
-      // Check if the loan was active during the report month OR if it's fully paid with last payment in previous month
-      const wasActiveDuringReportMonth = loanStartDate <= reportEndDate;
-      
-      // Check if loan is fully paid and last payment was in the previous month
+      // Check if loan is fully paid
       const loanPayments = payments.filter(p => p.loanId === loan.id && p.isPaid);
-      let lastPaymentInPreviousMonth = false;
+      const unpaidPayments = payments.filter(p => p.loanId === loan.id && !p.isPaid);
       
-      if (loanPayments.length > 0) {
-        const lastPaidPayment = loanPayments.sort((a, b) => new Date(b.paidDate || '').getTime() - new Date(a.paidDate || '').getTime())[0];
-        if (lastPaidPayment && lastPaidPayment.paidDate) {
-          const lastPaymentDate = new Date(lastPaidPayment.paidDate);
-          lastPaymentInPreviousMonth = lastPaymentDate >= reportMonth && lastPaymentDate <= reportEndDate;
-        }
+      // If loan is fully paid (no unpaid payments), don't include it
+      if (unpaidPayments.length === 0 && loanPayments.length > 0) {
+        return false;
       }
       
-      return wasActiveDuringReportMonth || lastPaymentInPreviousMonth;
+      // Determine the effective start date for the loan
+      let effectiveStartDate: Date;
+      
+      if (loan.isReloan && loan.dateReloan) {
+        // For reloans, use the amortization start date
+        effectiveStartDate = new Date(loan.startOfAmortization || loan.dateReloan);
+      } else {
+        // For regular loans, use the amortization start date or date granted
+        effectiveStartDate = new Date(loan.startOfAmortization || loan.dateGranted);
+      }
+      
+      // Check if the loan's amortization period overlaps with or starts before the report period
+      const loanIsActiveInReportPeriod = effectiveStartDate <= reportEndDate;
+      
+      // Also check if there are any payments made during the report month
+      const hasPaymentsInReportMonth = loanPayments.some(payment => {
+        if (!payment.paidDate) return false;
+        const paymentDate = new Date(payment.paidDate);
+        return paymentDate >= reportMonth && paymentDate <= reportEndDate;
+      });
+      
+      return loanIsActiveInReportPeriod || hasPaymentsInReportMonth;
     });
 
-    // Group loans by employee and calculate their latest monthly amortization based on Payment Scheduler
+    // Group loans by employee and calculate their monthly amortization
     const employeeLoans = filteredLoans.reduce((acc, loan) => {
       const employeeName = loan.employeeName;
       
-      // Get the latest paid payment for this loan from Payment Scheduler
-      const loanPayments = payments.filter(p => p.loanId === loan.id && p.isPaid);
-      const latestPaidPayment = loanPayments.length > 0 
-        ? loanPayments.sort((a, b) => new Date(b.paidDate || '').getTime() - new Date(a.paidDate || '').getTime())[0]
-        : null;
+      // Get the latest paid payment for this loan from the report month
+      const loanPayments = payments.filter(p => 
+        p.loanId === loan.id && 
+        p.isPaid && 
+        p.paidDate
+      );
       
-      // Include if there's a latest paid payment within the report period
-      if (!latestPaidPayment) return acc;
+      const paymentsInReportMonth = loanPayments.filter(payment => {
+        const paymentDate = new Date(payment.paidDate!);
+        return paymentDate >= reportMonth && paymentDate <= reportEndDate;
+      });
       
-      const latestPaidDate = new Date(latestPaidPayment.paidDate || '');
-      if (latestPaidDate < reportMonth || latestPaidDate > reportEndDate) return acc;
+      // If no payments in report month, use the monthly amortization if loan is active
+      let amortizationAmount = 0;
+      if (paymentsInReportMonth.length > 0) {
+        // Use the sum of payments made in the report month
+        amortizationAmount = paymentsInReportMonth.reduce((sum, payment) => sum + payment.amount, 0);
+      } else {
+        // Use monthly amortization if loan should be active during report period
+        const effectiveStartDate = loan.isReloan && loan.dateReloan 
+          ? new Date(loan.startOfAmortization || loan.dateReloan)
+          : new Date(loan.startOfAmortization || loan.dateGranted);
+        
+        if (effectiveStartDate <= reportEndDate && loan.remainingBalance > 0) {
+          amortizationAmount = loan.monthlyAmortization;
+        }
+      }
+      
+      // Skip if no amortization amount
+      if (amortizationAmount === 0) return acc;
 
       if (!acc[employeeName]) {
         acc[employeeName] = {
@@ -119,11 +119,11 @@ const ReportGenerator = () => {
         };
       }
 
-      // Use the actual payment amount from the latest paid payment
+      // Add amortization based on loan type
       if (loan.loanType === 'SSS') {
-        acc[employeeName].sssAmortization += latestPaidPayment.amount;
+        acc[employeeName].sssAmortization += amortizationAmount;
       } else if (loan.loanType === 'HDMF') {
-        acc[employeeName].hdmfAmortization += latestPaidPayment.amount;
+        acc[employeeName].hdmfAmortization += amortizationAmount;
         // Set Pag-IBIG ID Number if this is an HDMF loan
         if (loan.pagibigIdNumber) {
           acc[employeeName].pagibigIdNumber = loan.pagibigIdNumber;
@@ -149,9 +149,9 @@ const ReportGenerator = () => {
     });
 
     return {
-      fromDate: format(reportMonth, 'MMMM dd, yyyy'), // First day of report month
-      toDate: format(reportEndDate, 'MMMM dd, yyyy'), // Last day of report month
-      reportPeriod: format(reportMonth, 'MMMM yyyy'), // Show report month
+      fromDate: format(reportMonth, 'MMMM dd, yyyy'),
+      toDate: format(reportEndDate, 'MMMM dd, yyyy'),
+      reportPeriod: format(reportMonth, 'MMMM yyyy'),
       employees: employeeData,
       totalSSSAmortization: Math.round(totalSSSAmortization * 100) / 100,
       totalHDMFAmortization: Math.round(totalHDMFAmortization * 100) / 100,
