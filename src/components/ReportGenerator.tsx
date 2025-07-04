@@ -54,8 +54,10 @@ const ReportGenerator = () => {
       let effectiveStartDate: Date;
       
       if (loan.isReloan && loan.dateReloan) {
-        // For reloans, use the amortization start date
-        effectiveStartDate = new Date(loan.startOfAmortization || loan.dateReloan);
+        // For reloans, use the Date of Reloan as the new basis
+        effectiveStartDate = new Date(loan.dateReloan);
+        // Add 2 months to get the actual amortization start date (same logic as original loans)
+        effectiveStartDate.setMonth(effectiveStartDate.getMonth() + 2);
       } else {
         // For regular loans, use the amortization start date or date granted
         effectiveStartDate = new Date(loan.startOfAmortization || loan.dateGranted);
@@ -90,18 +92,26 @@ const ReportGenerator = () => {
         return paymentDate >= reportMonth && paymentDate <= reportEndDate;
       });
       
-      // If no payments in report month, use the monthly amortization if loan is active
+      // Determine amortization amount based on reloan status
       let amortizationAmount = 0;
       if (paymentsInReportMonth.length > 0) {
         // Use the sum of payments made in the report month
         amortizationAmount = paymentsInReportMonth.reduce((sum, payment) => sum + payment.amount, 0);
       } else {
         // Use monthly amortization if loan should be active during report period
-        const effectiveStartDate = loan.isReloan && loan.dateReloan 
-          ? new Date(loan.startOfAmortization || loan.dateReloan)
-          : new Date(loan.startOfAmortization || loan.dateGranted);
+        let effectiveStartDate: Date;
+        
+        if (loan.isReloan && loan.dateReloan) {
+          // For reloans, calculate start date from Date of Reloan
+          effectiveStartDate = new Date(loan.dateReloan);
+          effectiveStartDate.setMonth(effectiveStartDate.getMonth() + 2);
+        } else {
+          // For regular loans, use existing logic
+          effectiveStartDate = new Date(loan.startOfAmortization || loan.dateGranted);
+        }
         
         if (effectiveStartDate <= reportEndDate && loan.remainingBalance > 0) {
+          // For reloans, use the current monthly amortization (which should be the new amount)
           amortizationAmount = loan.monthlyAmortization;
         }
       }
