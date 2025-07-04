@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ const HDMFLoanEntry = () => {
   const [formData, setFormData] = useState({
     employeeName: '',
     department: '',
+    pagibigIdNumber: '',
     dateGranted: '',
     principalAmount: '',
     loanTerm: '',
@@ -84,6 +86,7 @@ const HDMFLoanEntry = () => {
     setFormData({
       employeeName: latestLoan.employeeName,
       department: latestLoan.department,
+      pagibigIdNumber: latestLoan.pagibigIdNumber || '',
       dateGranted: latestLoan.dateGranted,
       principalAmount: latestLoan.principalAmount.toString(),
       loanTerm: latestLoan.loanTerm.toString(),
@@ -161,6 +164,7 @@ const HDMFLoanEntry = () => {
       setFormData({
         employeeName: '',
         department: '',
+        pagibigIdNumber: '',
         dateGranted: '',
         principalAmount: '',
         loanTerm: '',
@@ -238,6 +242,7 @@ const HDMFLoanEntry = () => {
           ...loanToUpdate,
           employeeName: formData.employeeName,
           department: formData.department,
+          pagibigIdNumber: formData.pagibigIdNumber,
           dateGranted: formData.dateGranted,
           principalAmount,
           loanTerm,
@@ -306,6 +311,7 @@ const HDMFLoanEntry = () => {
         id: `HDMF_${Date.now()}`,
         employeeName: formData.employeeName,
         department: formData.department,
+        pagibigIdNumber: formData.pagibigIdNumber,
         loanType: 'HDMF',
         dateGranted: formData.dateGranted,
         principalAmount,
@@ -336,6 +342,7 @@ const HDMFLoanEntry = () => {
     setFormData({
       employeeName: '',
       department: '',
+      pagibigIdNumber: '',
       dateGranted: '',
       principalAmount: '',
       loanTerm: '',
@@ -437,6 +444,16 @@ const HDMFLoanEntry = () => {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pagibigIdNumber">Pag-IBIG ID Number</Label>
+                <Input
+                  id="pagibigIdNumber"
+                  value={formData.pagibigIdNumber}
+                  onChange={(e) => handleInputChange('pagibigIdNumber', e.target.value)}
+                  placeholder="Enter Pag-IBIG ID Number"
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

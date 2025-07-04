@@ -47,6 +47,7 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
                   <th className="border border-gray-300 p-3 text-left">Employee Name</th>
                   <th className="border border-gray-300 p-3 text-right">SSS Loan Monthly</th>
                   <th className="border border-gray-300 p-3 text-right">HDMF Loan Monthly</th>
+                  <th className="border border-gray-300 p-3 text-center">Pag-IBIG ID</th>
                   <th className="border border-gray-300 p-3 text-right">Total Monthly</th>
                 </tr>
               </thead>
@@ -59,6 +60,9 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
                     </td>
                     <td className="border border-gray-300 p-3 text-right">
                       ₱{employee.hdmfAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="border border-gray-300 p-3 text-center">
+                      {employee.pagibigIdNumber || ''}
                     </td>
                     <td className="border border-gray-300 p-3 text-right font-semibold">
                       ₱{employee.totalAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -75,6 +79,7 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
                   <td className="border border-gray-300 p-3 text-right text-orange-600">
                     ₱{reportData.totalHDMFAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
+                  <td className="border border-gray-300 p-3 text-center">-</td>
                   <td className="border border-gray-300 p-3 text-right text-red-600">
                     ₱{reportData.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>

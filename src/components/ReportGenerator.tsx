@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,6 +114,7 @@ const ReportGenerator = () => {
           employeeName,
           sssAmortization: 0,
           hdmfAmortization: 0,
+          pagibigIdNumber: '',
           loans: []
         };
       }
@@ -122,6 +124,10 @@ const ReportGenerator = () => {
         acc[employeeName].sssAmortization += latestPaidPayment.amount;
       } else if (loan.loanType === 'HDMF') {
         acc[employeeName].hdmfAmortization += latestPaidPayment.amount;
+        // Set Pag-IBIG ID Number if this is an HDMF loan
+        if (loan.pagibigIdNumber) {
+          acc[employeeName].pagibigIdNumber = loan.pagibigIdNumber;
+        }
       }
 
       acc[employeeName].loans.push(loan);
@@ -177,12 +183,13 @@ const ReportGenerator = () => {
       { A: 'SALARY LOAN PER PAYROLL DEDUCTION REPORT' },
       { A: `As of ${data.reportPeriod}` },
       { A: '' },
-      { A: 'Employee Name', B: 'SSS Amortization', C: 'HDMF Amortization', D: 'Total Amortization' },
+      { A: 'Employee Name', B: 'SSS Amortization', C: 'HDMF Amortization', D: 'Pag-IBIG ID', E: 'Total Amortization' },
       ...data.employees.map((emp: any) => ({
         A: emp.employeeName,
         B: `₱${emp.sssAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
         C: `₱${emp.hdmfAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-        D: `₱${emp.totalAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+        D: emp.pagibigIdNumber || '',
+        E: `₱${emp.totalAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
       })),
       { A: '' },
       { A: 'TOTALS:' },
