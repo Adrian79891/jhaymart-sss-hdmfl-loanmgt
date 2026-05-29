@@ -46,6 +46,7 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
                 <tr className="bg-gray-100">
                   <th className="border border-gray-300 p-3 text-left">Employee Name</th>
                   <th className="border border-gray-300 p-3 text-right">SSS Loan Monthly</th>
+                  <th className="border border-gray-300 p-3 text-right">SSS Emergency Loan</th>
                   <th className="border border-gray-300 p-3 text-right">HDMF Loan Monthly</th>
                   <th className="border border-gray-300 p-3 text-center">Pag-IBIG ID</th>
                   <th className="border border-gray-300 p-3 text-right">Total Monthly</th>
@@ -59,6 +60,9 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
                       ₱{employee.sssAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="border border-gray-300 p-3 text-right">
+                      ₱{(employee.sssEmergencyAmortization || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="border border-gray-300 p-3 text-right">
                       ₱{employee.hdmfAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="border border-gray-300 p-3 text-center">
@@ -69,12 +73,15 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
                     </td>
                   </tr>
                 ))}
-                
+
                 {/* Totals Row */}
                 <tr className="bg-gray-200 font-bold">
                   <td className="border border-gray-300 p-3 text-center">TOTAL</td>
                   <td className="border border-gray-300 p-3 text-right text-blue-600">
                     ₱{reportData.totalSSSAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="border border-gray-300 p-3 text-right text-pink-600">
+                    ₱{(reportData.totalSSSEmergencyAmortization || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="border border-gray-300 p-3 text-right text-orange-600">
                     ₱{reportData.totalHDMFAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -90,24 +97,31 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
         </div>
 
         {/* Summary Boxes */}
-        <div className="grid grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="border rounded p-4 text-center">
-            <h3 className="font-semibold mb-2 text-blue-600">Total SSS Loan Monthly</h3>
-            <p className="text-xl font-bold">
+            <h3 className="font-semibold mb-2 text-blue-600">Total SSS Loan</h3>
+            <p className="text-lg font-bold">
               ₱{reportData.totalSSSAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </p>
           </div>
-          
+
           <div className="border rounded p-4 text-center">
-            <h3 className="font-semibold mb-2 text-orange-600">Total HDMF Loan Monthly</h3>
-            <p className="text-xl font-bold">
+            <h3 className="font-semibold mb-2 text-pink-600">Total SSS Emergency</h3>
+            <p className="text-lg font-bold">
+              ₱{(reportData.totalSSSEmergencyAmortization || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+
+          <div className="border rounded p-4 text-center">
+            <h3 className="font-semibold mb-2 text-orange-600">Total HDMF Loan</h3>
+            <p className="text-lg font-bold">
               ₱{reportData.totalHDMFAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </p>
           </div>
 
           <div className="border rounded p-4 text-center bg-gray-50">
-            <h3 className="font-semibold mb-2 text-red-600">Grand Total Monthly</h3>
-            <p className="text-2xl font-bold">
+            <h3 className="font-semibold mb-2 text-red-600">Grand Total</h3>
+            <p className="text-xl font-bold">
               ₱{reportData.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </p>
           </div>

@@ -4,7 +4,7 @@ export interface Loan {
   employeeName: string;
   department: string;
   pagibigIdNumber?: string; // New field for Pag-IBIG ID Number
-  loanType: 'SSS' | 'HDMF';
+  loanType: 'SSS' | 'HDMF' | 'SSS_EMERGENCY';
   dateGranted: string;
   principalAmount: number;
   loanTerm: number;
