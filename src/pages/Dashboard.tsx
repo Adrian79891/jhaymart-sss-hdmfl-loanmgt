@@ -214,6 +214,28 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
+          {/* SSS Emergency Loan Entry */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-pink-500 rounded-lg flex items-center justify-center group-hover:bg-pink-600 transition-colors">
+                  <User className="h-5 w-5 text-white" />
+                </div>
+                <span>SSS Emergency Loan</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">Create SSS Emergency Loan applications for employees</p>
+              <Button
+                onClick={() => navigate('/sss-emergency-loan')}
+                className="w-full bg-pink-600 hover:bg-pink-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New SSS Emergency Loan
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Search Loan */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
             <CardHeader className="pb-3">

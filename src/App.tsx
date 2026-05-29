@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import HDMFLoanEntry from "./pages/HDMFLoanEntry";
 import SSSLoanEntry from "./pages/SSSLoanEntry";
+import SSSEmergencyLoanEntry from "./pages/SSSEmergencyLoanEntry";
 import SearchLoan from "./pages/SearchLoan";
 import PaymentScheduler from "./pages/PaymentScheduler";
 import Reports from "./pages/Reports";
@@ -37,6 +38,7 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/hdmf-loan" element={<HDMFLoanEntry />} />
               <Route path="/sss-loan" element={<SSSLoanEntry />} />
+              <Route path="/sss-emergency-loan" element={<SSSEmergencyLoanEntry />} />
               <Route path="/search" element={<SearchLoan />} />
               <Route path="/payment-scheduler" element={<PaymentScheduler />} />
               <Route path="/reports" element={<Reports />} />
