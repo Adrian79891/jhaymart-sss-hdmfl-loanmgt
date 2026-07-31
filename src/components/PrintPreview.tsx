@@ -47,6 +47,7 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
                   <th className="border border-gray-300 p-3 text-left">Employee Name</th>
                   <th className="border border-gray-300 p-3 text-right">SSS Loan Monthly</th>
                   <th className="border border-gray-300 p-3 text-right">SSS Emergency Loan</th>
+                  <th className="border border-gray-300 p-3 text-right">SSS Calamity Loan</th>
                   <th className="border border-gray-300 p-3 text-right">HDMF Loan Monthly</th>
                   <th className="border border-gray-300 p-3 text-center">Pag-IBIG ID</th>
                   <th className="border border-gray-300 p-3 text-right">Total Monthly</th>
@@ -61,6 +62,9 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
                     </td>
                     <td className="border border-gray-300 p-3 text-right">
                       ₱{(employee.sssEmergencyAmortization || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="border border-gray-300 p-3 text-right">
+                      ₱{(employee.sssCalamityAmortization || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="border border-gray-300 p-3 text-right">
                       ₱{employee.hdmfAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -83,6 +87,9 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
                   <td className="border border-gray-300 p-3 text-right text-pink-600">
                     ₱{(reportData.totalSSSEmergencyAmortization || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
+                  <td className="border border-gray-300 p-3 text-right text-amber-600">
+                    ₱{(reportData.totalSSSCalamityAmortization || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </td>
                   <td className="border border-gray-300 p-3 text-right text-orange-600">
                     ₱{reportData.totalHDMFAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
@@ -97,7 +104,7 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
         </div>
 
         {/* Summary Boxes */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <div className="border rounded p-4 text-center">
             <h3 className="font-semibold mb-2 text-blue-600">Total SSS Loan</h3>
             <p className="text-lg font-bold">
@@ -111,6 +118,14 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ reportData, onClose }) => {
               ₱{(reportData.totalSSSEmergencyAmortization || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </p>
           </div>
+
+          <div className="border rounded p-4 text-center">
+            <h3 className="font-semibold mb-2 text-amber-600">Total SSS Calamity</h3>
+            <p className="text-lg font-bold">
+              ₱{(reportData.totalSSSCalamityAmortization || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+
 
           <div className="border rounded p-4 text-center">
             <h3 className="font-semibold mb-2 text-orange-600">Total HDMF Loan</h3>

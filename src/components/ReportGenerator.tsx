@@ -151,6 +151,7 @@ const ReportGenerator = () => {
           employeeName,
           sssAmortization: 0,
           sssEmergencyAmortization: 0,
+          sssCalamityAmortization: 0,
           hdmfAmortization: 0,
           pagibigIdNumber: '',
           loans: []
@@ -160,17 +161,16 @@ const ReportGenerator = () => {
       // Add amortization based on loan type
       if (loan.loanType === 'SSS') {
         acc[employeeName].sssAmortization += amortizationAmount;
-        console.log(`Added SSS amortization for ${employeeName}: ₱${amortizationAmount}`);
       } else if (loan.loanType === 'SSS_EMERGENCY') {
         acc[employeeName].sssEmergencyAmortization += amortizationAmount;
-        console.log(`Added SSS Emergency amortization for ${employeeName}: ₱${amortizationAmount}`);
+      } else if (loan.loanType === 'SSS_CALAMITY') {
+        acc[employeeName].sssCalamityAmortization += amortizationAmount;
       } else if (loan.loanType === 'HDMF') {
         acc[employeeName].hdmfAmortization += amortizationAmount;
         // Set Pag-IBIG ID Number if this is an HDMF loan
         if (loan.pagibigIdNumber) {
           acc[employeeName].pagibigIdNumber = loan.pagibigIdNumber;
         }
-        console.log(`Added HDMF amortization for ${employeeName}: ₱${amortizationAmount}`);
       }
 
       acc[employeeName].loans.push(loan);
@@ -183,17 +183,23 @@ const ReportGenerator = () => {
     // Calculate totals
     let totalSSSAmortization = 0;
     let totalSSSEmergencyAmortization = 0;
+    let totalSSSCalamityAmortization = 0;
     let totalHDMFAmortization = 0;
 
     employeeData.forEach((employee: any) => {
       totalSSSAmortization += employee.sssAmortization;
       totalSSSEmergencyAmortization += employee.sssEmergencyAmortization;
+      totalSSSCalamityAmortization += employee.sssCalamityAmortization;
       totalHDMFAmortization += employee.hdmfAmortization;
       employee.sssAmortization = Math.round(employee.sssAmortization * 100) / 100;
       employee.sssEmergencyAmortization = Math.round(employee.sssEmergencyAmortization * 100) / 100;
+      employee.sssCalamityAmortization = Math.round(employee.sssCalamityAmortization * 100) / 100;
       employee.hdmfAmortization = Math.round(employee.hdmfAmortization * 100) / 100;
       employee.totalAmortization =
-        employee.sssAmortization + employee.sssEmergencyAmortization + employee.hdmfAmortization;
+        employee.sssAmortization +
+        employee.sssEmergencyAmortization +
+        employee.sssCalamityAmortization +
+        employee.hdmfAmortization;
     });
 
     return {
@@ -203,8 +209,15 @@ const ReportGenerator = () => {
       employees: employeeData,
       totalSSSAmortization: Math.round(totalSSSAmortization * 100) / 100,
       totalSSSEmergencyAmortization: Math.round(totalSSSEmergencyAmortization * 100) / 100,
+      totalSSSCalamityAmortization: Math.round(totalSSSCalamityAmortization * 100) / 100,
       totalHDMFAmortization: Math.round(totalHDMFAmortization * 100) / 100,
-      grandTotal: Math.round((totalSSSAmortization + totalSSSEmergencyAmortization + totalHDMFAmortization) * 100) / 100,
+      grandTotal:
+        Math.round(
+          (totalSSSAmortization +
+            totalSSSEmergencyAmortization +
+            totalSSSCalamityAmortization +
+            totalHDMFAmortization) * 100
+        ) / 100,
       preparedBy: preparedBy.trim() || 'N/A',
       approvedBy: approvedBy.trim() || 'N/A',
       reportDate: new Date().toLocaleDateString('en-US', { 
@@ -232,19 +245,21 @@ const ReportGenerator = () => {
       { A: 'SALARY LOAN PER PAYROLL DEDUCTION REPORT' },
       { A: `As of ${data.reportPeriod}` },
       { A: '' },
-      { A: 'Employee Name', B: 'SSS Amortization', C: 'SSS Emergency Loan', D: 'HDMF Amortization', E: 'Pag-IBIG ID', F: 'Total Amortization' },
+      { A: 'Employee Name', B: 'SSS Amortization', C: 'SSS Emergency Loan', D: 'SSS Calamity Loan', E: 'HDMF Amortization', F: 'Pag-IBIG ID', G: 'Total Amortization' },
       ...data.employees.map((emp: any) => ({
         A: emp.employeeName,
         B: `₱${emp.sssAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
         C: `₱${emp.sssEmergencyAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-        D: `₱${emp.hdmfAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-        E: emp.pagibigIdNumber || '',
-        F: `₱${emp.totalAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+        D: `₱${emp.sssCalamityAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+        E: `₱${emp.hdmfAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+        F: emp.pagibigIdNumber || '',
+        G: `₱${emp.totalAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
       })),
       { A: '' },
       { A: 'TOTALS:' },
       { A: 'Total SSS Amortization:', B: `₱${data.totalSSSAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
       { A: 'Total SSS Emergency Loan:', B: `₱${data.totalSSSEmergencyAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+      { A: 'Total SSS Calamity Loan:', B: `₱${data.totalSSSCalamityAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
       { A: 'Total HDMF Amortization:', B: `₱${data.totalHDMFAmortization.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
       { A: 'Grand Total:', B: `₱${data.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
       { A: '' },
