@@ -22,10 +22,12 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { getLoans, refreshLoanBalances } from '@/utils/storage';
 import { Loan } from '@/types/loan';
+import { useParallaxTilt } from '@/hooks/use-parallax-tilt';
 
 const Dashboard = () => {
   const { logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const tilt = useParallaxTilt(5);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [stats, setStats] = useState({
     totalLoans: 0,
@@ -95,8 +97,7 @@ const Dashboard = () => {
       title: 'HDMF Loan Entry',
       description: 'Create new HDMF loan applications with automated calculations',
       icon: Building2,
-      gradient: 'from-sky-400 to-blue-600',
-      button: 'from-sky-500 to-blue-600',
+      material: 'icon-emerald',
       route: '/hdmf-loan',
       cta: 'New HDMF Loan',
       badge: `${stats.hdmfLoans} Active`,
@@ -105,8 +106,7 @@ const Dashboard = () => {
       title: 'SSS Loan Entry',
       description: 'Create new SSS loan applications with flexible interest options',
       icon: User,
-      gradient: 'from-violet-400 to-purple-700',
-      button: 'from-violet-500 to-purple-700',
+      material: 'icon-emerald',
       route: '/sss-loan',
       cta: 'New SSS Loan',
       badge: `${stats.sssLoans} Active`,
@@ -115,8 +115,7 @@ const Dashboard = () => {
       title: 'SSS Emergency Loan',
       description: 'Create SSS Emergency Loan applications for employees',
       icon: LifeBuoy,
-      gradient: 'from-pink-400 to-rose-600',
-      button: 'from-pink-500 to-rose-600',
+      material: 'icon-emerald',
       route: '/sss-emergency-loan',
       cta: 'New SSS Emergency Loan',
       badge: `${stats.sssEmergencyLoans} Active`,
@@ -125,8 +124,7 @@ const Dashboard = () => {
       title: 'SSS Calamity Loan',
       description: 'Create SSS Calamity Loan applications with automatic scheduling',
       icon: CloudLightning,
-      gradient: 'from-amber-300 to-orange-600',
-      button: 'from-amber-500 to-orange-600',
+      material: 'icon-emerald',
       route: '/sss-calamity-loan',
       cta: 'New SSS Calamity Loan',
       badge: `${stats.sssCalamityLoans} Active`,
@@ -135,8 +133,7 @@ const Dashboard = () => {
       title: 'Search Loan Info',
       description: 'Find loan details by employee name with complete history',
       icon: Search,
-      gradient: 'from-emerald-300 to-green-600',
-      button: 'from-emerald-500 to-green-600',
+      material: 'icon-chrome',
       route: '/search',
       cta: 'Search Loans',
     },
@@ -144,17 +141,15 @@ const Dashboard = () => {
       title: 'Payment Scheduler',
       description: 'Manage payment schedules and track payment dates for all employees',
       icon: Calendar,
-      gradient: 'from-orange-300 to-amber-600',
-      button: 'from-orange-500 to-amber-600',
+      material: 'icon-chrome',
       route: '/payment-scheduler',
       cta: 'Manage Payments',
     },
     {
       title: 'Reports',
-      description: 'Generate PDF and Excel reports with filtering options',
+      description: 'Generate print and Excel reports with filtering options',
       icon: FileText,
-      gradient: 'from-rose-400 to-red-600',
-      button: 'from-rose-500 to-red-600',
+      material: 'icon-chrome',
       route: '/reports',
       cta: 'Generate Reports',
       ctaIcon: Download,
@@ -163,12 +158,12 @@ const Dashboard = () => {
       title: 'Backup & Restore',
       description: 'Backup system data and restore from previous backups',
       icon: Database,
-      gradient: 'from-slate-300 to-slate-600',
-      button: 'from-slate-500 to-slate-700',
+      material: 'icon-chrome',
       route: '/backup',
       cta: 'Manage Data',
     },
   ];
+
 
   return (
     <div className="min-h-screen">
@@ -187,14 +182,13 @@ const Dashboard = () => {
                 <p className="text-sm text-white/70">SSS &amp; HDMF Loan Management</p>
               </div>
             </div>
-            <Button
+            <button
               onClick={handleLogout}
-              variant="outline"
-              className="bg-white/10 border-white/25 text-white hover:bg-white/20"
+              className="btn-glass flex h-11 items-center gap-2 px-6 text-sm font-semibold text-white"
             >
-              <LogOut className="h-4 w-4 mr-2" />
+              <LogOut className="h-4 w-4" />
               Logout
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -203,23 +197,26 @@ const Dashboard = () => {
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
-            { label: 'Total Loans', value: `${stats.totalLoans}`, icon: FileText, grad: 'from-sky-500/80 to-blue-700/80' },
-            { label: 'Active Loans', value: `${stats.activeLoans}`, icon: TrendingUp, grad: 'from-emerald-500/80 to-green-700/80' },
-            { label: 'Total Principal', value: formatCurrency(stats.totalPrincipal), icon: DollarSign, grad: 'from-violet-500/80 to-purple-700/80' },
-            { label: 'Total Outstanding', value: formatCurrency(stats.totalRemaining), icon: TrendingUp, grad: 'from-rose-500/80 to-red-700/80' },
-          ].map((stat) => (
+            { label: 'Total Loans', value: `${stats.totalLoans}`, icon: FileText, material: 'icon-chrome' },
+            { label: 'Active Loans', value: `${stats.activeLoans}`, icon: TrendingUp, material: 'icon-emerald' },
+            { label: 'Total Principal', value: formatCurrency(stats.totalPrincipal), icon: DollarSign, material: 'icon-emerald' },
+            { label: 'Total Outstanding', value: formatCurrency(stats.totalRemaining), icon: TrendingUp, material: 'icon-chrome' },
+          ].map((stat, i) => (
             <Card
               key={stat.label}
-              className={`glass-panel-dark floating-card border-0 bg-gradient-to-br ${stat.grad}`}
+              onMouseMove={tilt.onMouseMove}
+              onMouseLeave={tilt.onMouseLeave}
+              className="glass-panel-dark light-follow floating-card animate-rise border-0 group"
+              style={{ animationDelay: `${i * 70}ms` }}
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white/80 text-sm font-medium">{stat.label}</p>
+                    <p className="text-white/70 text-sm font-medium">{stat.label}</p>
                     <p className="text-2xl font-bold text-white text-3d-light">{stat.value}</p>
                   </div>
-                  <div className="icon-3d w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-white">
-                    <stat.icon className="h-6 w-6" />
+                  <div className={`icon-3d ${stat.material} w-12 h-12 flex items-center justify-center text-white`}>
+                    <stat.icon className="h-6 w-6 relative z-10 drop-shadow" />
                   </div>
                 </div>
               </CardContent>
@@ -229,16 +226,23 @@ const Dashboard = () => {
 
         {/* Main Menu Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {menuItems.map((item) => {
+          {menuItems.map((item, i) => {
             const CtaIcon = item.ctaIcon ?? Plus;
             return (
-              <Card key={item.title} className="glass-panel floating-card group cursor-pointer">
+              <Card
+                key={item.title}
+                onMouseMove={tilt.onMouseMove}
+                onMouseLeave={tilt.onMouseLeave}
+                onClick={() => navigate(item.route)}
+                className="glass-panel light-follow floating-card animate-rise group cursor-pointer border-0"
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center space-x-3">
                     <div
-                      className={`icon-3d w-11 h-11 rounded-xl flex items-center justify-center bg-gradient-to-br ${item.gradient}`}
+                      className={`icon-3d ${item.material} w-12 h-12 flex items-center justify-center`}
                     >
-                      <item.icon className="h-5 w-5 text-white relative z-10" />
+                      <item.icon className="h-5 w-5 text-white relative z-10 drop-shadow" />
                     </div>
                     <span className="text-3d">{item.title}</span>
                   </CardTitle>
@@ -247,23 +251,27 @@ const Dashboard = () => {
                   <p className="text-muted-foreground mb-4">{item.description}</p>
                   {item.badge && (
                     <div className="mb-4">
-                      <Badge className="bg-foreground/5 text-foreground border border-foreground/10">
+                      <Badge className="rounded-full bg-primary/10 text-primary border border-primary/20">
                         {item.badge}
                       </Badge>
                     </div>
                   )}
-                  <Button
-                    onClick={() => navigate(item.route)}
-                    className={`w-full text-white bg-gradient-to-r ${item.button} shadow-lg hover:brightness-110 transition-all`}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(item.route);
+                    }}
+                    className="btn-glass btn-emerald flex h-11 w-full items-center justify-center gap-2 text-sm font-semibold"
                   >
-                    <CtaIcon className="h-4 w-4 mr-2" />
+                    <CtaIcon className="h-4 w-4" />
                     {item.cta}
-                  </Button>
+                  </button>
                 </CardContent>
               </Card>
             );
           })}
         </div>
+
 
         {/* Recent Loans */}
         <Card className="glass-panel">
