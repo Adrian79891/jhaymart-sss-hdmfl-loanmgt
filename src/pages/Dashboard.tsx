@@ -26,6 +26,7 @@ import { Loan } from '@/types/loan';
 const Dashboard = () => {
   const { logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const tilt = useParallaxTilt(5);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [stats, setStats] = useState({
     totalLoans: 0,
