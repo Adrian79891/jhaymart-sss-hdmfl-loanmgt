@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import { initializeStorage } from "./utils/storage";
 import Plasma from "./components/Plasma";
+import Particles from "./components/Particles";
 import SplashScreen from "./components/SplashScreen";
 
 const Reports = lazy(() => import("./pages/Reports"));
@@ -46,16 +47,17 @@ const App = () => {
       <TooltipProvider>
         <Plasma
           color="#97cfa1"
-          speed={1.1}
+          speed={1.0}
           direction="forward"
-          scale={1}
-          opacity={1}
+          scale={1.05}
+          opacity={0.55}
           mouseInteractive={false}
           renderScale={0.55}
           maxDpr={1.5}
           targetFps={60}
           iterations={60}
         />
+        <Particles count={55} opacity={0.6} />
         {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
         <Toaster />
         <Sonner />
