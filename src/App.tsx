@@ -50,7 +50,7 @@ const App = () => {
           speed={1.0}
           direction="forward"
           scale={1.05}
-          opacity={0.55}
+          opacity={0.34}
           mouseInteractive={false}
           renderScale={0.55}
           maxDpr={1.5}
