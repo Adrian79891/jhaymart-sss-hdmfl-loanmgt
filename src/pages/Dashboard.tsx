@@ -180,14 +180,13 @@ const Dashboard = () => {
                 <p className="text-sm text-white/70">SSS &amp; HDMF Loan Management</p>
               </div>
             </div>
-            <Button
+            <button
               onClick={handleLogout}
-              variant="outline"
-              className="bg-white/10 border-white/25 text-white hover:bg-white/20"
+              className="btn-glass flex h-11 items-center gap-2 px-6 text-sm font-semibold text-white"
             >
-              <LogOut className="h-4 w-4 mr-2" />
+              <LogOut className="h-4 w-4" />
               Logout
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -196,23 +195,26 @@ const Dashboard = () => {
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
-            { label: 'Total Loans', value: `${stats.totalLoans}`, icon: FileText, grad: 'from-sky-500/80 to-blue-700/80' },
-            { label: 'Active Loans', value: `${stats.activeLoans}`, icon: TrendingUp, grad: 'from-emerald-500/80 to-green-700/80' },
-            { label: 'Total Principal', value: formatCurrency(stats.totalPrincipal), icon: DollarSign, grad: 'from-violet-500/80 to-purple-700/80' },
-            { label: 'Total Outstanding', value: formatCurrency(stats.totalRemaining), icon: TrendingUp, grad: 'from-rose-500/80 to-red-700/80' },
-          ].map((stat) => (
+            { label: 'Total Loans', value: `${stats.totalLoans}`, icon: FileText, material: 'icon-chrome' },
+            { label: 'Active Loans', value: `${stats.activeLoans}`, icon: TrendingUp, material: 'icon-emerald' },
+            { label: 'Total Principal', value: formatCurrency(stats.totalPrincipal), icon: DollarSign, material: 'icon-emerald' },
+            { label: 'Total Outstanding', value: formatCurrency(stats.totalRemaining), icon: TrendingUp, material: 'icon-chrome' },
+          ].map((stat, i) => (
             <Card
               key={stat.label}
-              className={`glass-panel-dark floating-card border-0 bg-gradient-to-br ${stat.grad}`}
+              onMouseMove={tilt.onMouseMove}
+              onMouseLeave={tilt.onMouseLeave}
+              className="glass-panel-dark light-follow floating-card animate-rise border-0 group"
+              style={{ animationDelay: `${i * 70}ms` }}
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white/80 text-sm font-medium">{stat.label}</p>
+                    <p className="text-white/70 text-sm font-medium">{stat.label}</p>
                     <p className="text-2xl font-bold text-white text-3d-light">{stat.value}</p>
                   </div>
-                  <div className="icon-3d w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-white">
-                    <stat.icon className="h-6 w-6" />
+                  <div className={`icon-3d ${stat.material} w-12 h-12 flex items-center justify-center text-white`}>
+                    <stat.icon className="h-6 w-6 relative z-10 drop-shadow" />
                   </div>
                 </div>
               </CardContent>
@@ -222,16 +224,23 @@ const Dashboard = () => {
 
         {/* Main Menu Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {menuItems.map((item) => {
+          {menuItems.map((item, i) => {
             const CtaIcon = item.ctaIcon ?? Plus;
             return (
-              <Card key={item.title} className="glass-panel floating-card group cursor-pointer">
+              <Card
+                key={item.title}
+                onMouseMove={tilt.onMouseMove}
+                onMouseLeave={tilt.onMouseLeave}
+                onClick={() => navigate(item.route)}
+                className="glass-panel light-follow floating-card animate-rise group cursor-pointer border-0"
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center space-x-3">
                     <div
-                      className={`icon-3d w-11 h-11 rounded-xl flex items-center justify-center bg-gradient-to-br ${item.gradient}`}
+                      className={`icon-3d ${item.material} w-12 h-12 flex items-center justify-center`}
                     >
-                      <item.icon className="h-5 w-5 text-white relative z-10" />
+                      <item.icon className="h-5 w-5 text-white relative z-10 drop-shadow" />
                     </div>
                     <span className="text-3d">{item.title}</span>
                   </CardTitle>
@@ -240,23 +249,27 @@ const Dashboard = () => {
                   <p className="text-muted-foreground mb-4">{item.description}</p>
                   {item.badge && (
                     <div className="mb-4">
-                      <Badge className="bg-foreground/5 text-foreground border border-foreground/10">
+                      <Badge className="rounded-full bg-primary/10 text-primary border border-primary/20">
                         {item.badge}
                       </Badge>
                     </div>
                   )}
-                  <Button
-                    onClick={() => navigate(item.route)}
-                    className={`w-full text-white bg-gradient-to-r ${item.button} shadow-lg hover:brightness-110 transition-all`}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(item.route);
+                    }}
+                    className="btn-glass btn-emerald flex h-11 w-full items-center justify-center gap-2 text-sm font-semibold"
                   >
-                    <CtaIcon className="h-4 w-4 mr-2" />
+                    <CtaIcon className="h-4 w-4" />
                     {item.cta}
-                  </Button>
+                  </button>
                 </CardContent>
               </Card>
             );
           })}
         </div>
+
 
         {/* Recent Loans */}
         <Card className="glass-panel">
