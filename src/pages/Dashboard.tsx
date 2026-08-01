@@ -22,6 +22,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { getLoans, refreshLoanBalances } from '@/utils/storage';
 import { Loan } from '@/types/loan';
+import { useParallaxTilt } from '@/hooks/use-parallax-tilt';
 
 const Dashboard = () => {
   const { logout, isAuthenticated } = useAuth();
